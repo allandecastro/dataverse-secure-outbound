@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.26054.147" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26054.147" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26054.00147">
+  <SolutionManifest>
+    <UniqueName>SecureOutboundIntegration</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="SecureOutboundIntegration" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions />
+    <Version>1.0.10577.171</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>allandecastro</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="allandecastro" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions />
+      <EMailAddress xsi:nil="true"></EMailAddress>
+      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <CustomizationPrefix>adc</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>10000</CustomizationOptionValuePrefix>
+      <Addresses>
+        <Address>
+          <AddressNumber>1</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+        <Address>
+          <AddressNumber>2</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+      </Addresses>
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="1" schemaName="account" behavior="1" />
+      <RootComponent type="1" schemaName="contact" behavior="1" />
+      <RootComponent type="61" schemaName="adc_/imgs/adc_EntraManagedIdentities.svg" behavior="0" />
+      <RootComponent type="62" schemaName="adc_SecureOutboundIntegration" behavior="0" />
+      <RootComponent type="80" schemaName="adc_SecureOutboundIntegration" behavior="0" />
+      <RootComponent type="91" id="{89faa4a8-a370-f111-ab0c-7ced8d7523f4}" schemaName="SecureOutboundPlugin, Version=0.0.0.0, Culture=neutral, PublicKeyToken=252a89106671bced" behavior="0" />
+      <RootComponent type="92" id="{9c8145d0-a370-f111-ab0d-6045bde0e12a}" behavior="0" />
+    </RootComponents>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="1" schemaName="contact" displayName="Contact" parentSchemaName="" solution="msdyn_ChannelExperienceApp (1.0.26054.1011)" />
+        <Dependent type="1" schemaName="contact" displayName="Contact" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="environmentvariabledefinition" displayName="Environment Variable Definition" solution="EnvironmentVariables (1.0.2406.4)">
+          <package appName="EnvironmentVariables" version="1.0.2406.4">EnvironmentVariablesSolutionAnchor (1.0.2406.4)</package>
+        </Required>
+        <Dependent type="62" schemaName="adc_SecureOutboundIntegration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="environmentvariabledefinition" displayName="Environment Variable Definition" solution="EnvironmentVariables (1.0.2406.4)">
+          <package appName="EnvironmentVariables" version="1.0.2406.4">EnvironmentVariablesSolutionAnchor (1.0.2406.4)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Account Reference Panel" parentDisplayName="Account" solution="msdynce_AppCommon (9.0.4.0066)" id="{098ae145-1567-41ec-8398-86dbaac70c9b}">
+          <package appName="msdynce_AppCommon" version="9.0.26054.10001">msdynce_AppCommonAnchor (9.0.26054.10001)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Social Profiles" parentDisplayName="Account" solution="msdynce_AppCommon (9.0.4.0066)" id="{2205c86d-ed88-4a2f-a447-3b86a8781f2e}">
+          <package appName="msdynce_AppCommon" version="9.0.26054.10001">msdynce_AppCommonAnchor (9.0.26054.10001)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Recent Cases and Entitlements" parentDisplayName="Account" solution="msdynce_Service (9.0.5.56)" id="{43300723-f867-420b-ab28-976a4d12e6c4}">
+          <package appName="msdynce_Service" version="9.0.26054.1005">msdynce_ServiceAnchor (9.0.26054.1005)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Cases For Customer" parentDisplayName="Account" solution="OmnichannelPrime (1.10.0.245)" id="{48028ae0-bf87-48c9-adf6-3dc9f29d7661}">
+          <package appName="OmnichannelPrime" version="1.10.0.113">msdyn_ContactCenterAdminCopilot (1.10.0.113)</package>
+          <package appName="OmnichannelPrime" version="1.10.0.10">msdyn_ContactCenterAgentManagement (1.10.0.10)</package>
+          <package appName="OmnichannelPrime" version="1.10.0.1">msdyn_ContactCenterAgentManagementData (1.10.0.1)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Account Hierarchy Tile Form" parentDisplayName="Account" solution="msdynce_AppCommon (9.0.4.0066)" id="{69cff312-cfb6-4289-9631-249ab85d2c62}">
+          <package appName="msdynce_AppCommon" version="9.0.26054.10001">msdynce_AppCommonAnchor (9.0.26054.10001)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="App for Outlook Account Quick View" parentDisplayName="Account" solution="AppforOutlookPatch (1.2.409)" id="{76b81f10-2a08-4f1a-9454-ee38bea94eb5}">
+          <package appName="Guided Help Package" version="1.2.409">AppforOutlookCDSSolution (1.2.409)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="account card" parentDisplayName="Account" solution="msdynce_AppCommon (9.0.4.0066)" id="{b028db32-3619-48a5-ac51-cf3f947b0ef3}">
+          <package appName="msdynce_AppCommon" version="9.0.26054.10001">msdynce_AppCommonAnchor (9.0.26054.10001)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Account Quick Create" parentDisplayName="Account" solution="msdynce_AppCommon (9.0.4.0066)" id="{c9e7ec2d-efca-4e4c-b3e3-f63c4bba5e4b}">
+          <package appName="msdynce_AppCommon" version="9.0.26054.10001">msdynce_AppCommonAnchor (9.0.26054.10001)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Customer profile" parentDisplayName="Account" solution="OmnichannelBase (1.10.0.146)" id="{e9a9c8a9-e94d-47a9-a6c3-ec37ddb83b99}">
+          <package appName="UnifiedRoutingPrime" version="1.5.27.232">UnifiedRoutingPrimeAnchor (1.5.27.232)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="App for Outlook Account Card" parentDisplayName="Account" solution="AppforOutlookPatch (1.2.409)" id="{fb65cc73-181c-468b-9bb3-82ecde306991}">
+          <package appName="Guided Help Package" version="1.2.409">AppforOutlookCDSSolution (1.2.409)</package>
+        </Required>
+        <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="66" schemaName="msdyn_SalesOmniChannel.SalesPhoneNumberControl" displayName="msdyn_SalesOmniChannel.SalesPhoneNumberControl" solution="msdyn_SalesOmniChannel (9.1.26054.10002)">
+          <package appName="msdyn_AcceleratedSales" version="9.1.26054.10002">msdyn_AcceleratedSalesAnchor (9.1.26054.10002)</package>
+        </Required>
+        <Dependent type="60" displayName="SecureOutboundMainForm" parentDisplayName="Account" id="{3f027a28-8a61-f111-a826-70a8a57e51c1}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="ManagedIdentity" solution="Active" id="{6d53c6c1-26e5-47b9-9f98-252fc54d08cb}" />
+        <Dependent type="PluginPackage" displayName="adc_SecureOutboundPlugin" id.uniquename="adc_SecureOutboundPlugin" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="AppChannel" solution="msdyn_AppFrameworkInfraExtensions (1.0.0.17)" id.uniquename="AppChannel">
+          <package appName="PowerAppsAppFramework Package" version="1.0.0.25">PowerAppsAppFramework_Anchor (1.0.0.25)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=AppChannel" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="AppChannel" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="EnableRoleBasedOfflineProfileAccess" solution="SettingDefinitionsData (9.2.2603.2603182)" id.uniquename="EnableRoleBasedOfflineProfileAccess">
+          <package appName="AppModule" version="9.2.2603.2603182">AppModuleSolutionAnchor (9.2.2603.2603182)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=EnableRoleBasedOfflineProfileAccess" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="EnableRoleBasedOfflineProfileAccess" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="HeaderAndNavigationRefresh" solution="msdyn_AppFrameworkInfraExtensions (1.0.0.17)" id.uniquename="HeaderAndNavigationRefresh">
+          <package appName="PowerAppsAppFramework Package" version="1.0.0.25">PowerAppsAppFramework_Anchor (1.0.0.25)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=HeaderAndNavigationRefresh" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="HeaderAndNavigationRefresh" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="IsSmartEmailAddressValidationControlEnabled" solution="msdyn_EmailAddressValidation (1.0.0.4)" id.uniquename="IsSmartEmailAddressValidationControlEnabled">
+          <package appName="DataValidationApp Package" version="1.0.0.4">DataValidationApp_Anchor (1.0.0.4)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=IsSmartEmailAddressValidationControlEnabled" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="IsSmartEmailAddressValidationControlEnabled" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="m365copilotmodelappenabled" solution="msdyn_M365CopilotAppInfraSettings (9.2.0.5)" id.uniquename="m365copilotmodelappenabled">
+          <package appName="PowerAppsAppCopilotApp Package" version="9.2.0.5">msdyn_M365CopilotAppInfraSettings (9.2.0.5)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=m365copilotmodelappenabled" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="m365copilotmodelappenabled" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="msdyn_TimelineModernization" solution="msdyn_TimelineExtended (9.0.26054.1019)" id.uniquename="msdyn_TimelineModernization">
+          <package appName="msdyn_CustomControlsExtended" version="9.0.26054.1019">msdyn_TimelineExtended (9.0.26054.1019)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=msdyn_TimelineModernization" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="msdyn_TimelineModernization" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="ServerMode" solution="SettingDefinitionsData (9.2.2603.2603182)" id.uniquename="ServerMode">
+          <package appName="AppModule" version="9.2.2603.2603182">AppModuleSolutionAnchor (9.2.2603.2603182)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=ServerMode" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="ServerMode" />
+      </MissingDependency>
+    </MissingDependencies>
+  </SolutionManifest>
+</ImportExportXml>

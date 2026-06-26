@@ -1,0 +1,42 @@
+root = true
+
+[*]
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# Naming
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_prefix
+dotnet_naming_rule.private_fields_underscore.severity = suggestion
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_prefix.required_prefix = _
+dotnet_naming_style.underscore_prefix.capitalization = camel_case
+
+# var preferences
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# 'this.' not required
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.xml]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

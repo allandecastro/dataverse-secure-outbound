@@ -1,0 +1,10 @@
+<mcpserver name="adc_SecureOutboundIntegration_MCPServer">
+  <description>MCP Server for app Secure Outbound Integration</description>
+  <displayname>Secure Outbound Integration MCP Server</displayname>
+  <iscustom>0</iscustom>
+  <iscustomizable>1</iscustomizable>
+  <isremote>0</isremote>
+  <serverurl>https://agent365.svc.cloud.microsoft/mcp/environments/4878571d-afd3-eef2-80fd-c4dd78ac3b4a/servers/adc_SecureOutboundIntegration_MCPServer</serverurl>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</mcpserver>

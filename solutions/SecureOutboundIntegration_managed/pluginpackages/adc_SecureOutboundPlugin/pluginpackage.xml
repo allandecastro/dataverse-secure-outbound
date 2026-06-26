@@ -1,0 +1,12 @@
+<pluginpackage uniquename="adc_SecureOutboundPlugin">
+  <exportkeyversion>1</exportkeyversion>
+  <iscustomizable>1</iscustomizable>
+  <managedidentityid>
+    <managedidentityid>6d53c6c1-26e5-47b9-9f98-252fc54d08cb</managedidentityid>
+  </managedidentityid>
+  <name>adc_SecureOutboundPlugin</name>
+  <package mimetype="application/octet-stream">adc_SecureOutboundPlugin.nupkg</package>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+  <version>1.0.0</version>
+</pluginpackage>

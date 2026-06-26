@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Classic (non-SDK-style) .NET Framework project, which is what the Dataverse plug-in
+  registration tooling expects. Builds a signed assembly targeting net462.
+  Azure dependencies are deployed via a Plug-in Package (.nupkg) — no ILMerge required.
+-->
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <!--
+    Optional per-developer signing config (gitignored). When a dev drops a
+    "signing.local.props" next to this csproj with a CodeSignThumbprint (or a .pfx
+    path), the AuthenticodeSignLocal target below kicks in automatically on Debug/Release
+    builds. Without it, nothing happens — so CI and other devs are never broken.
+    See signing.local.props.example for setup.
+  -->
+  <Import Project="signing.local.props" Condition="Exists('signing.local.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B8C4E2A1-3F5D-4A6B-9C7E-1D2F3A4B5C6D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Dataverse.SecureOutbound</RootNamespace>
+    <AssemblyName>SecureOutboundPlugin</AssemblyName>
+    <!-- net462 is the standard target for Dataverse sandbox plug-ins. -->
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <!-- Disable automatic reference to System.ValueTuple from MSBuild extensions -->
+    <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <!-- Plug-in assemblies must be strong-name signed before registration. -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>SecureOutboundPlugin.snk</AssemblyOriginatorKeyFile>
+    <!-- Restore NuGet packages listed in packages.config. -->
+    <RestoreProjectStyle>PackagesConfig</RestoreProjectStyle>
+    <!--
+      Local signing defaults:
+      - Auto-detect the PFX in ./certs if not provided explicitly.
+      - Optionally read password from SECUREOUTBOUND_PFX_PASSWORD.
+      - Or read password from Windows Credential Manager target set in
+        SECUREOUTBOUND_PFX_CREDENTIAL_TARGET.
+    -->
+    <CodeSignPfxPath Condition=" '$(CodeSignPfxPath)' == '' and Exists('$(MSBuildProjectDirectory)\certs\SecureOutboundPluginSigning.pfx') ">$(MSBuildProjectDirectory)\certs\SecureOutboundPluginSigning.pfx</CodeSignPfxPath>
+    <CodeSignPfxPassword Condition=" '$(CodeSignPfxPassword)' == '' and '$(SECUREOUTBOUND_PFX_PASSWORD)' != '' ">$(SECUREOUTBOUND_PFX_PASSWORD)</CodeSignPfxPassword>
+    <CodeSignPfxCredentialTarget Condition=" '$(CodeSignPfxCredentialTarget)' == '' and '$(CodeSignPfxPassword)' == '' and '$(CodeSignPfxPath)' != '' ">SecureOutboundPlugin.CodeSign</CodeSignPfxCredentialTarget>
+    <CodeSignPfxCredentialTarget Condition=" '$(CodeSignPfxCredentialTarget)' == '' and '$(SECUREOUTBOUND_PFX_CREDENTIAL_TARGET)' != '' ">$(SECUREOUTBOUND_PFX_CREDENTIAL_TARGET)</CodeSignPfxCredentialTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Sdk.Workflow, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.CrmSdk.Workflow.9.0.2.60\lib\net462\Microsoft.Xrm.Sdk.Workflow.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Activities" />
+    <Reference Include="System.Activities.Presentation" />
+    <Reference Include="System.Text.Encodings.Web, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Text.Encodings.Web.8.0.0\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=8.0.0.5, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Text.Json.8.0.5\lib\net462\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Workflow.Activities" />
+    <Reference Include="System.Workflow.ComponentModel" />
+    <Reference Include="System.Workflow.Runtime" />
+  </ItemGroup>
+  <!--
+    NuGet package references. HintPaths assume the default solution-level "packages" folder
+    produced by `nuget restore`. Adjust the relative paths if your layout differs.
+  -->
+  <ItemGroup>
+    <Reference Include="Microsoft.Xrm.Sdk">
+      <HintPath>..\..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.60\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Crm.Sdk.Proxy">
+      <HintPath>..\..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.60\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
+    </Reference>
+    <Reference Include="Azure.Core">
+      <HintPath>..\..\packages\Azure.Core.1.41.0\lib\net461\Azure.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Azure.Identity">
+      <HintPath>..\..\packages\Azure.Identity.1.11.4\lib\netstandard2.0\Azure.Identity.dll</HintPath>
+    </Reference>
+    <Reference Include="Azure.Security.KeyVault.Secrets">
+      <HintPath>..\..\packages\Azure.Security.KeyVault.Secrets.4.6.0\lib\netstandard2.0\Azure.Security.KeyVault.Secrets.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AccountPlugin.cs" />
+    <Compile Include="Models\ErpAccountPayload.cs" />
+    <Compile Include="Models\ErpAccountResponse.cs" />
+    <Compile Include="Plugins\LocalPluginContext.cs" />
+    <Compile Include="Plugins\PluginBase.cs" />
+    <Compile Include="Models\SecureOutboundSettings.cs" />
+    <Compile Include="Services\ISecretService.cs" />
+    <Compile Include="Services\IEnvironmentVariableService.cs" />
+    <Compile Include="Services\KeyVaultSecretService.cs" />
+    <Compile Include="Services\EnvironmentVariableService.cs" />
+    <Compile Include="Services\IErpService.cs" />
+    <Compile Include="Services\ErpService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".github\copilot-instructions.md" />
+    <None Include="App.config" />
+    <None Include="packages.config" />
+    <None Include="SecureOutboundPlugin.nuspec" />
+    <None Include="SecureOutboundPlugin.snk" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!--
+    Local Authenticode signing. Runs AFTER build (Debug and Release) when signing
+    inputs are available (thumbprint OR pfx + password).
+    Disabled in GitHub Actions and Azure DevOps so CI/CD can use its own signing
+    flow and environment secrets.
+  -->
+  <Target Name="AuthenticodeSignLocal" AfterTargets="Build" Condition=" '$(GITHUB_ACTIONS)' != 'true' and '$(TF_BUILD)' != 'True' and (('$(CodeSignThumbprint)' != '') or ('$(CodeSignPfxPath)' != '' and ('$(CodeSignPfxPassword)' != '' or '$(CodeSignPfxCredentialTarget)' != ''))) ">
+    <PropertyGroup>
+      <_SignArgs Condition=" '$(CodeSignThumbprint)' != '' ">-Thumbprint "$(CodeSignThumbprint)"</_SignArgs>
+      <_SignArgs Condition=" '$(CodeSignThumbprint)' == '' and '$(CodeSignPfxPath)' != '' ">-PfxPath "$(CodeSignPfxPath)" -PfxPassword "$(CodeSignPfxPassword)"</_SignArgs>
+      <_SignArgs Condition=" '$(CodeSignThumbprint)' == '' and '$(CodeSignPfxPath)' != '' and '$(CodeSignPfxPassword)' == '' and '$(CodeSignPfxCredentialTarget)' != '' ">-PfxPath "$(CodeSignPfxPath)" -PfxCredentialTarget "$(CodeSignPfxCredentialTarget)"</_SignArgs>
+    </PropertyGroup>
+    <Message Importance="high" Text="Authenticode-signing $(TargetPath) ..." />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\scripts\Sign-Assembly.ps1&quot; -AssemblyPath &quot;$(TargetPath)&quot; $(_SignArgs)" />
+  </Target>
+  <!--
+    Ensure nuget.exe is available for package generation in both Debug and Release.
+    Priority: project-local tool, standard NuGet install locations, then PATH.
+  -->
+  <Target Name="EnsureNuGetExe">
+    <PropertyGroup>
+      <NuGetLocalToolPath>$(MSBuildProjectDirectory)\.tools\nuget.exe</NuGetLocalToolPath>
+      <NuGetDownloadUrl>https://dist.nuget.org/win-x86-commandline/latest/nuget.exe</NuGetDownloadUrl>
+      <NuGetExe Condition=" '$(NuGetExe)' == '' and Exists('$(NuGetLocalToolPath)') ">$(NuGetLocalToolPath)</NuGetExe>
+      <NuGetExe Condition=" '$(NuGetExe)' == '' and Exists('$(MSBuildProjectDirectory)\nuget.exe') ">$(MSBuildProjectDirectory)\nuget.exe</NuGetExe>
+      <NuGetExe Condition=" '$(NuGetExe)' == '' and Exists('$(ProgramFiles)\NuGet\nuget.exe') ">$(ProgramFiles)\NuGet\nuget.exe</NuGetExe>
+      <NuGetExe Condition=" '$(NuGetExe)' == '' and Exists('$(ProgramFiles(x86))\NuGet\nuget.exe') ">$(ProgramFiles(x86))\NuGet\nuget.exe</NuGetExe>
+      <NuGetExe Condition=" '$(NuGetExe)' == '' ">nuget.exe</NuGetExe>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(MSBuildProjectDirectory)\.tools" Condition=" !Exists('$(MSBuildProjectDirectory)\.tools') " />
+    <Exec
+      Condition=" '$(NuGetExe)' == 'nuget.exe' and !Exists('$(NuGetLocalToolPath)') "
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing -Uri '$(NuGetDownloadUrl)' -OutFile '$(NuGetLocalToolPath)'&quot;" />
+    <PropertyGroup Condition=" '$(NuGetExe)' == 'nuget.exe' and Exists('$(NuGetLocalToolPath)') ">
+      <NuGetExe>$(NuGetLocalToolPath)</NuGetExe>
+    </PropertyGroup>
+  </Target>
+  <!--
+    Generate NuGet package after build. The package includes the main assembly
+    and all Azure SDK dependencies required for Dataverse sandbox deployment.
+  -->
+  <Target Name="PackPlugin" AfterTargets="Build" DependsOnTargets="EnsureNuGetExe">
+    <PropertyGroup>
+      <NuspecFile>$(MSBuildProjectDirectory)\SecureOutboundPlugin.nuspec</NuspecFile>
+      <PackageOutputDir>$(MSBuildProjectDirectory)\bin\$(Configuration)</PackageOutputDir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Creating NuGet package for Dataverse plugin..." />
+    <Error
+      Condition=" !Exists('$(NuGetExe)') and '$(NuGetExe)' != 'nuget.exe' "
+      Text="nuget.exe introuvable à l'emplacement attendu: $(NuGetExe)." />
+    <Exec Command="$(NuGetExe) pack $(NuspecFile) -Properties Configuration=$(Configuration) -OutputDirectory $(PackageOutputDir)" />
+  </Target>
+  <!--
+    Local NuGet package signing (nupkg). Runs after PackPlugin in local builds only.
+    CI/CD pipelines should use their own signing step and secrets.
+  -->
+  <Target Name="SignPluginPackageLocal" AfterTargets="PackPlugin" Condition=" '$(GITHUB_ACTIONS)' != 'true' and '$(TF_BUILD)' != 'True' and '$(CodeSignPfxPath)' != '' and ('$(CodeSignPfxPassword)' != '' or '$(CodeSignPfxCredentialTarget)' != '') ">
+    <PropertyGroup>
+      <_SignPackageScript>$(MSBuildProjectDirectory)\..\..\scripts\Sign-NuGetPackage.ps1</_SignPackageScript>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PackagesToSign Include="$(MSBuildProjectDirectory)\bin\$(Configuration)\*.nupkg" />
+    </ItemGroup>
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(_SignPackageScript)&quot; -NuGetExe &quot;$(NuGetExe)&quot; -PackagePath &quot;%(_PackagesToSign.Identity)&quot; -PfxPath &quot;$(CodeSignPfxPath)&quot; -PfxPassword &quot;$(CodeSignPfxPassword)&quot; -PfxCredentialTarget &quot;$(CodeSignPfxCredentialTarget)&quot;" />
+  </Target>
+</Project>

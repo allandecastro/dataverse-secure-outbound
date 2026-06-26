@@ -1,0 +1,145 @@
+name: CI - Export Solution from Dataverse
+
+# Pulls the SecureOutboundIntegration solution FROM DEV, unpacks it into the
+# source-controlled solutions/ folder, and opens a PR with the diff. This is how customizations
+# made in the maker portal (steps, env-var definitions, the column, etc.) get back into git.
+#
+# Manual-dispatch only. Uses the same per-environment GitHub Environment secrets as cd.yml.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  export:
+    # Self-hosted Windows runner (no GitHub-hosted minutes). Windows is required for the
+    # Power Platform tooling.
+    runs-on: self-hosted
+    # Binds the DEV POWER_PLATFORM_* secrets (DEV = the maker source environment, demo1).
+    environment: DEV
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Avoid Windows CRLF normalization noise that can appear as fake diffs in create-pull-request.
+      - name: Normalize git line-ending behavior for CI
+        shell: pwsh
+        run: |
+          git config --local core.autocrlf false
+          git config --local core.eol lf
+
+      - name: Install Power Platform CLI
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      # Bump solution version in DEV before export so the committed unmanaged/managed trees
+      # and downstream imports always carry a newer version.
+      - name: Compute solution version
+        id: version
+        shell: pwsh
+        run: |
+          $now = Get-Date -AsUTC
+          $major = [int]"${{ vars.SOLUTION_VERSION_MAJOR || '1' }}"
+          $minor = [int]"${{ vars.SOLUTION_VERSION_MINOR || '0' }}"
+          $runNumber = [int]"${{ github.run_number }}"
+          $runAttempt = [int]"${{ github.run_attempt }}"
+
+          if ($major -lt 0 -or $major -gt 65535) { throw "major must be between 0 and 65535." }
+          if ($minor -lt 0 -or $minor -gt 65535) { throw "minor must be between 0 and 65535." }
+
+          # Dataverse expects 4 numeric parts (0..65535).
+          # build: date-based, safe until year 2163 (relative to 2000).
+          $build = (($now.Year - 2000) * 400) + $now.DayOfYear
+          if ($build -lt 0 -or $build -gt 65535) { throw "Computed build out of range: $build" }
+
+          # revision: derived from GitHub run identity; bounded to Dataverse max.
+          $revision = ((($runNumber - 1) * 10) + ($runAttempt - 1)) % 65535 + 1
+          $version = "$major.$minor.$build.$revision"
+          Write-Host "Computed solution version: $version"
+          "number=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Set solution version in DEV
+        uses: microsoft/powerplatform-actions/set-online-solution-version@v1
+        with:
+          environment-url: ${{ vars.POWER_PLATFORM_ENV_URL }}
+          app-id: ${{ secrets.POWER_PLATFORM_CLIENT_ID }}
+          client-secret: ${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.POWER_PLATFORM_TENANT_ID }}
+          name: SecureOutboundIntegration
+          version: ${{ steps.version.outputs.number }}
+
+      - name: Publish solution customizations in DEV
+        uses: microsoft/powerplatform-actions/publish-solution@v1
+        with:
+          environment-url: ${{ vars.POWER_PLATFORM_ENV_URL }}
+          app-id: ${{ secrets.POWER_PLATFORM_CLIENT_ID }}
+          client-secret: ${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.POWER_PLATFORM_TENANT_ID }}
+
+      # Export the UNMANAGED solution (source-of-truth for development).
+      - name: Export solution (unmanaged)
+        uses: microsoft/powerplatform-actions/export-solution@v1
+        with:
+          environment-url: ${{ vars.POWER_PLATFORM_ENV_URL }}
+          app-id: ${{ secrets.POWER_PLATFORM_CLIENT_ID }}
+          client-secret: ${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.POWER_PLATFORM_TENANT_ID }}
+          solution-name: SecureOutboundIntegration
+          managed: false
+          solution-output-file: out/SecureOutboundIntegration-unmanaged.zip
+
+      # Unpack unmanaged into source control so maker changes are diffable. Replaces folder
+      # contents so deletions in Dataverse are reflected too.
+      - name: Unpack unmanaged solution into source control
+        uses: microsoft/powerplatform-actions/unpack-solution@v1
+        with:
+          solution-file: out/SecureOutboundIntegration-unmanaged.zip
+          solution-folder: solutions/SecureOutboundIntegration
+          solution-type: Unmanaged
+          overwrite-files: true
+
+      # Export + unpack managed to keep a managed pack source in git (no XML mutation in CD).
+      - name: Export solution (managed)
+        uses: microsoft/powerplatform-actions/export-solution@v1
+        with:
+          environment-url: ${{ vars.POWER_PLATFORM_ENV_URL }}
+          app-id: ${{ secrets.POWER_PLATFORM_CLIENT_ID }}
+          client-secret: ${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.POWER_PLATFORM_TENANT_ID }}
+          solution-name: SecureOutboundIntegration
+          managed: true
+          solution-output-file: out/SecureOutboundIntegration-managed.zip
+
+      - name: Unpack managed solution into source control
+        uses: microsoft/powerplatform-actions/unpack-solution@v1
+        with:
+          solution-file: out/SecureOutboundIntegration-managed.zip
+          solution-folder: solutions/SecureOutboundIntegration_managed
+          solution-type: Managed
+          overwrite-files: true
+
+      # Open a PR with whatever changed. No-op (no PR) when the unpack produced no diff.
+      - name: Open PR with the exported solution
+        uses: peter-evans/create-pull-request@v6
+        with:
+          # Uses the built-in GITHUB_TOKEN. Enable repo Settings -> Actions -> General ->
+          # Workflow permissions -> "Allow GitHub Actions to create and approve pull requests".
+          token: ${{ github.token }}
+          branch: solution-sync/DEV
+          base: main
+          commit-message: "Sync SecureOutboundIntegration solution from DEV"
+          title: "Solution sync: SecureOutboundIntegration from DEV"
+          body: |
+            Automated export of the **SecureOutboundIntegration** solution from `DEV`,
+            version `${{ steps.version.outputs.number }}`,
+            unpacked into:
+            - `solutions/SecureOutboundIntegration` (unmanaged)
+            - `solutions/SecureOutboundIntegration_managed` (managed)
+
+            Review the diff to confirm the plugin step, environment-variable definitions, and the
+            Account column came across as expected before merging.
+          add-paths: solutions/**
+          delete-branch: true

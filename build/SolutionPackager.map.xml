@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SolutionPackager mapping file.
+
+  Purpose: at PACK time, redirect the packager to read the freshly built & signed plug-in
+  PACKAGE (.nupkg) from the CI build output instead of the stale copy stored in the committed
+  solutions/SecureOutboundIntegration tree. This keeps binaries OUT of source control while guaranteeing the
+  deployed solution always carries the just-signed package.
+
+  We deploy the plugin as a NuGet plug-in package (so the Azure SDK dependencies travel with it),
+  so the package lives under the solution's PluginPackages folder and that is what we map.
+
+  IMPORTANT: the exact 'map' path depends on how YOUR unpacked solution lays out the package.
+  After the first export+unpack, open solutions/SecureOutboundIntegration/PluginPackages and adjust the
+  wildcard to match. Confirm against your pac CLI version — package mapping is newer than
+  assembly mapping; cd.yml uses a plain file copy instead, which doesn't rely on map support.
+
+  Reference: SolutionPackager /map argument.
+-->
+<Mapping>
+  <!-- Map the plug-in package (.nupkg) to the CI build output (downloaded to ./artifacts in CD). -->
+  <FileToFile
+    map="PluginPackages\**\*.nupkg"
+    to="..\artifacts\*.nupkg" />
+</Mapping>

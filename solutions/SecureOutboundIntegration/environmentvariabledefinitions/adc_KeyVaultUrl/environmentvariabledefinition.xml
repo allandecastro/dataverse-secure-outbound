@@ -1,0 +1,11 @@
+<environmentvariabledefinition schemaname="adc_KeyVaultUrl">
+  <defaultvalue>https://kvdvsecureweu.vault.azure.net/</defaultvalue>
+  <displayname default="KeyVaultUrl">
+    <label description="KeyVaultUrl" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000003</type>
+</environmentvariabledefinition>

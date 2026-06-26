@@ -1,0 +1,29 @@
+[
+  {
+    "name": "AccountSync",
+    "scriptFile": "ErpMockFunction.dll",
+    "entryPoint": "ErpMockFunction.Functions.AccountSyncFunction.Run",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "request",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "post"
+        ],
+        "route": "erp/account-sync",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  }
+]

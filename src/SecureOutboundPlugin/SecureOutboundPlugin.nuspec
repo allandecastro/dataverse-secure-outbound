@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+	<id>SecureOutboundPlugin</id>
+	<version>1.0.0</version>
+	<authors>Allan de Castro</authors>
+	<owners>Allan de Castro</owners>
+	<requireLicenseAcceptance>false</requireLicenseAcceptance>
+	<description>Plugin Dataverse avec appels sortants sécurisés vers Azure Key Vault via Managed Identity</description>
+	<copyright>Copyright 2025</copyright>
+	<tags>Dataverse Plugin Azure KeyVault ManagedIdentity</tags>
+
+	<!-- 
+	  Dépendances du plugin - toutes les DLLs nécessaires seront incluses dans le package.
+	  Dataverse déploiera automatiquement ces assemblies avec le plugin dans le sandbox.
+	-->
+	<dependencies>
+	  <!-- Azure SDK pour Key Vault et Identity -->
+	  <dependency id="Azure.Core" version="1.41.0" />
+	  <dependency id="Azure.Identity" version="1.11.4" />
+	  <dependency id="Azure.Security.KeyVault.Secrets" version="4.6.0" />
+
+	  <!-- Dépendances système requises -->
+	  <dependency id="System.Buffers" version="4.5.1" />
+	  <dependency id="System.Memory" version="4.5.5" />
+	  <dependency id="System.Runtime.CompilerServices.Unsafe" version="6.0.0" />
+	  <dependency id="System.Text.Encodings.Web" version="8.0.0" />
+	  <dependency id="System.Text.Json" version="8.0.5" />
+	  <dependency id="System.Threading.Tasks.Extensions" version="4.5.4" />
+	  <dependency id="System.ValueTuple" version="4.5.0" />
+	  <dependency id="Newtonsoft.Json" version="13.0.4" />
+	  <dependency id="Microsoft.Bcl.AsyncInterfaces" version="8.0.0" />
+	  <dependency id="System.Numerics.Vectors" version="4.5.0" />
+	  <dependency id="System.Diagnostics.DiagnosticSource" version="6.0.1" />
+	  <dependency id="System.Memory.Data" version="6.0.0" />
+	  <dependency id="Microsoft.Identity.Client" version="4.61.3" />
+	  <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.61.3" />
+	</dependencies>
+  </metadata>
+
+	<files>
+	<!-- Assembly principal du plugin (signé) -->
+	<file src="bin\$configuration$\SecureOutboundPlugin.dll" target="lib\net462" />
+
+	<!-- Assemblies de dépendances Azure et système -->
+	<file src="..\..\packages\Azure.Core.1.41.0\lib\net461\Azure.Core.dll" target="lib\net462" />
+	<file src="..\..\packages\Azure.Identity.1.11.4\lib\netstandard2.0\Azure.Identity.dll" target="lib\net462" />
+	<file src="..\..\packages\Azure.Security.KeyVault.Secrets.4.6.0\lib\netstandard2.0\Azure.Security.KeyVault.Secrets.dll" target="lib\net462" />
+
+	<!-- Dépendances système nécessaires -->
+	<file src="..\..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Text.Encodings.Web.8.0.0\lib\net462\System.Text.Encodings.Web.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Text.Json.8.0.5\lib\net462\System.Text.Json.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll" target="lib\net462" />
+	<file src="..\..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll" target="lib\net462" />
+	<file src="..\..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll" target="lib\net462" />
+	<file src="..\..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Diagnostics.DiagnosticSource.6.0.1\lib\net461\System.Diagnostics.DiagnosticSource.dll" target="lib\net462" />
+	<file src="..\..\packages\System.Memory.Data.6.0.0\lib\netstandard2.0\System.Memory.Data.dll" target="lib\net462" />
+	<file src="..\..\packages\Microsoft.Identity.Client.4.61.3\lib\net462\Microsoft.Identity.Client.dll" target="lib\net462" />
+	<file src="..\..\packages\Microsoft.Identity.Client.Extensions.Msal.4.61.3\lib\netstandard2.0\Microsoft.Identity.Client.Extensions.Msal.dll" target="lib\net462" />
+  </files>
+</package>

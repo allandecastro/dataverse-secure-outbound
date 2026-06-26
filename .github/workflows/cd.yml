@@ -1,0 +1,269 @@
+name: CD - Pack & Import Solution
+
+# Promotes the Dataverse solution with a freshly built/signed plugin package.
+# Triggers automatically when the DEV solution-sync PR is merged into main, and can also be run manually.
+#
+# PREREQUISITES — the run fails fast with a clear message if any of these are missing:
+#   1. solutions/SecureOutboundIntegration/ and solutions/SecureOutboundIntegration_managed/
+#      must be populated (run export-solution.yml and merge its PR).
+#   2. For each GitHub Environment (DEV / SIT) add:
+#        Secrets : POWER_PLATFORM_CLIENT_ID, POWER_PLATFORM_CLIENT_SECRET,
+#                  POWER_PLATFORM_TENANT_ID, CODE_SIGN_PFX_BASE64, CODE_SIGN_PFX_PASSWORD
+#        Variables: POWER_PLATFORM_ENV_URL
+#   3. The service principal must be a Dataverse application user with System Administrator.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Target environment
+        type: choice
+        required: true
+        options: [DEV, SIT]
+        default: DEV
+
+jobs:
+  deploy:
+    if: github.event_name != 'pull_request' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'solution-sync/DEV'))
+    runs-on: self-hosted
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'SIT' }}
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'SIT' }}
+      DEPLOYMENT_SETTINGS_FILE: power-platform/settings/deployment-settings-${{ github.event_name == 'workflow_dispatch' && inputs.target || 'SIT' }}.json
+      CONFIGURATION: Release
+      PROJECT: src/SecureOutboundPlugin/SecureOutboundPlugin.csproj
+      ASSEMBLY: src/SecureOutboundPlugin/bin/Release/SecureOutboundPlugin.dll
+      NUSPEC: src/SecureOutboundPlugin/SecureOutboundPlugin.nuspec
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Pre-flight checks ────────────────────────────────────────────────────
+      # Fail fast with actionable messages before spending time on the build.
+      - name: Pre-flight checks
+        shell: pwsh
+        run: |
+          Write-Host "::group::CD pre-flight checks"
+          Write-Host "::notice::Target environment: ${{ env.TARGET_ENV }}"
+          Write-Host "::notice::Deployment settings: ${{ env.DEPLOYMENT_SETTINGS_FILE }}"
+          $errors = @()
+
+          if (-not (Test-Path "solutions/SecureOutboundIntegration/Other/Solution.xml")) {
+            $errors += "solutions/SecureOutboundIntegration/ is empty or missing. Run the export-solution workflow, merge its PR, then retry."
+          }
+
+          if (-not (Test-Path "solutions/SecureOutboundIntegration_managed/Other/Solution.xml")) {
+            $errors += "solutions/SecureOutboundIntegration_managed/ is empty or missing. Run the export-solution workflow, merge its PR, then retry."
+          }
+
+          if (-not (Test-Path "${{ env.NUSPEC }}")) {
+            $errors += "SecureOutboundPlugin.nuspec not found at ${{ env.NUSPEC }}."
+          }
+
+          if ([string]::IsNullOrWhiteSpace("${{ vars.POWER_PLATFORM_ENV_URL }}")) {
+            $errors += "POWER_PLATFORM_ENV_URL variable is not set on the ${{ env.TARGET_ENV }} GitHub Environment."
+          }
+
+          if ([string]::IsNullOrWhiteSpace("${{ vars.MANAGED_IDENTITY_APPLICATION_ID }}")) {
+            $errors += "MANAGED_IDENTITY_APPLICATION_ID variable is not set on the ${{ env.TARGET_ENV }} GitHub Environment."
+          }
+          if ([string]::IsNullOrWhiteSpace("${{ vars.DATAVERSE_MANAGED_IDENTITY_GUID }}")) {
+            $errors += "DATAVERSE_MANAGED_IDENTITY_GUID variable is not set on the ${{ env.TARGET_ENV }} GitHub Environment."
+          }
+
+          if (-not (Test-Path "${{ env.DEPLOYMENT_SETTINGS_FILE }}")) {
+            $errors += "Deployment settings file not found: ${{ env.DEPLOYMENT_SETTINGS_FILE }}."
+          }
+
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Host "::error::$_" }
+            Write-Host "::endgroup::"
+            exit 1
+          }
+
+          Write-Host "Pre-flight checks passed for environment: ${{ env.TARGET_ENV }}"
+          Write-Host "::endgroup::"
+
+      # ── Build ────────────────────────────────────────────────────────────────
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore src/SecureOutboundPlugin/packages.config -PackagesDirectory packages
+
+      - name: Build (Release, strong-named)
+        run: msbuild ${{ env.PROJECT }} /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=AnyCPU /m
+
+      # ── Authenticode sign (required) ─────────────────────────────────────────
+      - name: Restore code-signing certificate
+        shell: pwsh
+        env:
+          PFX_BASE64: ${{ secrets.CODE_SIGN_PFX_BASE64 }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PFX_BASE64)) {
+            throw "CODE_SIGN_PFX_BASE64 is required for CD package signing on ${{ env.TARGET_ENV }}."
+          }
+          [IO.File]::WriteAllBytes("codesign.pfx", [Convert]::FromBase64String($env:PFX_BASE64))
+
+      - name: Authenticode sign assembly
+        shell: pwsh
+        env:
+          PFX_PASSWORD: ${{ secrets.CODE_SIGN_PFX_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PFX_PASSWORD)) {
+            throw "CODE_SIGN_PFX_PASSWORD is required for CD package signing on ${{ env.TARGET_ENV }}."
+          }
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw "signtool.exe not found." }
+          & $signtool.FullName sign /f codesign.pfx /p $env:PFX_PASSWORD `
+            /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "${{ env.ASSEMBLY }}"
+          if ($LASTEXITCODE -ne 0) { throw "signtool sign failed." }
+
+      # ── Pack plugin package (.nupkg) ─────────────────────────────────────────
+      - name: Pack plugin NuGet package
+        shell: pwsh
+        run: |
+          Write-Host "::group::Pack plugin package"
+          nuget pack "${{ env.NUSPEC }}" -OutputDirectory out/plugin -Properties Configuration=Release
+          $pkg = Get-ChildItem out/plugin -Filter *.nupkg | Select-Object -First 1
+          if (-not $pkg) { throw "nuget pack produced no .nupkg." }
+          Write-Host "::notice::Produced package: $($pkg.FullName)"
+          Write-Host "::endgroup::"
+
+      - name: Sign plugin NuGet package
+        shell: pwsh
+        env:
+          PFX_PASSWORD: ${{ secrets.CODE_SIGN_PFX_PASSWORD }}
+        run: |
+          Write-Host "::group::Sign plugin package"
+          $pkg = Get-ChildItem out/plugin -Filter *.nupkg | Select-Object -First 1
+          if (-not $pkg) { throw "No .nupkg found to sign." }
+          if ([string]::IsNullOrWhiteSpace($env:PFX_PASSWORD)) {
+            throw "CODE_SIGN_PFX_PASSWORD is required for NuGet package signing."
+          }
+          nuget sign $pkg.FullName `
+            -CertificatePath "codesign.pfx" `
+            -CertificatePassword $env:PFX_PASSWORD `
+            -Timestamper "http://timestamp.digicert.com"
+          Write-Host "::notice::NuGet package signature completed."
+          Write-Host "::endgroup::"
+
+      - name: Remove certificate from runner
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Force -ErrorAction SilentlyContinue codesign.pfx
+
+      # ── Inject signed package into managed solution source ───────────────────
+      - name: Inject plugin package into solution
+        shell: pwsh
+        run: |
+          Write-Host "::group::Inject package into managed solution"
+          $pkg = Get-ChildItem out/plugin -Filter *.nupkg | Select-Object -First 1
+          $dest = Get-ChildItem solutions/SecureOutboundIntegration_managed/pluginpackages -Recurse -Filter *.nupkg `
+            -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $dest) {
+            throw "No .nupkg placeholder found under solutions/SecureOutboundIntegration_managed/pluginpackages. " +
+                  "Ensure the solution was exported after the plugin package was registered."
+          }
+          Copy-Item $pkg.FullName $dest.FullName -Force
+          Write-Host "::notice::Injected $($pkg.Name) -> $($dest.FullName)"
+          Write-Host "::endgroup::"
+
+      # ── Pack & import solution ───────────────────────────────────────────────
+      - name: Install Power Platform CLI
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Pack solution (Managed)
+        uses: microsoft/powerplatform-actions/pack-solution@v1
+        with:
+          solution-folder: solutions/SecureOutboundIntegration_managed
+          solution-file: out/SecureOutboundIntegration.zip
+          solution-type: Managed
+
+      - name: Ensure managed identity prerequisites (pre-import)
+        shell: pwsh
+        run: |
+          Write-Host "::group::Ensure Dataverse managedidentity record (required pre-import)"
+          $tokenEndpoint = "https://login.microsoftonline.com/${{ secrets.POWER_PLATFORM_TENANT_ID }}/oauth2/v2.0/token"
+          $scope = "${{ vars.POWER_PLATFORM_ENV_URL }}".TrimEnd('/') + "/.default"
+          $body = @{
+            client_id     = "${{ secrets.POWER_PLATFORM_CLIENT_ID }}"
+            client_secret = "${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}"
+            scope         = $scope
+            grant_type    = "client_credentials"
+          }
+          $tokenResponse = Invoke-RestMethod -Method Post -Uri $tokenEndpoint -Body $body -ContentType "application/x-www-form-urlencoded"
+          if (-not $tokenResponse.access_token) { throw "Failed to acquire Dataverse access token." }
+
+          ./scripts/managed-identity/Provision-ManagedIdentityDataverseRecord.ps1 `
+            -DataverseUrl "${{ vars.POWER_PLATFORM_ENV_URL }}" `
+            -DataverseRecordManagedIdentityId "${{ vars.DATAVERSE_MANAGED_IDENTITY_GUID }}" `
+            -ApplicationId "${{ vars.MANAGED_IDENTITY_APPLICATION_ID }}" `
+            -TenantId "${{ secrets.POWER_PLATFORM_TENANT_ID }}" `
+            -AccessToken $tokenResponse.access_token
+          Write-Host "::endgroup::"
+
+      - name: Import solution into ${{ env.TARGET_ENV }}
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ vars.POWER_PLATFORM_ENV_URL }}
+          app-id: ${{ secrets.POWER_PLATFORM_CLIENT_ID }}
+          client-secret: ${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.POWER_PLATFORM_TENANT_ID }}
+          solution-file: out/SecureOutboundIntegration.zip
+          use-deployment-settings-file: true
+          deployment-settings-file: ${{ env.DEPLOYMENT_SETTINGS_FILE }}
+          force-overwrite: true
+          publish-changes: true
+
+      # A fresh solution install does not reliably carry the plug-in-package -> managedidentity
+      # binding, so bind it explicitly here (idempotent). Without it the plug-in fails at runtime
+      # with "PluginPackage ... is not associated to a Managed identity".
+      - name: Associate plug-in package with managed identity (post-import)
+        shell: pwsh
+        run: |
+          Write-Host "::group::Associate plug-in package with managedidentity (post-import)"
+          $tokenEndpoint = "https://login.microsoftonline.com/${{ secrets.POWER_PLATFORM_TENANT_ID }}/oauth2/v2.0/token"
+          $scope = "${{ vars.POWER_PLATFORM_ENV_URL }}".TrimEnd('/') + "/.default"
+          $body = @{
+            client_id     = "${{ secrets.POWER_PLATFORM_CLIENT_ID }}"
+            client_secret = "${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}"
+            scope         = $scope
+            grant_type    = "client_credentials"
+          }
+          $tokenResponse = Invoke-RestMethod -Method Post -Uri $tokenEndpoint -Body $body -ContentType "application/x-www-form-urlencoded"
+          if (-not $tokenResponse.access_token) { throw "Failed to acquire Dataverse access token." }
+
+          ./scripts/managed-identity/Provision-ManagedIdentityDataverseRecord.ps1 `
+            -DataverseUrl "${{ vars.POWER_PLATFORM_ENV_URL }}" `
+            -DataverseRecordManagedIdentityId "${{ vars.DATAVERSE_MANAGED_IDENTITY_GUID }}" `
+            -ApplicationId "${{ vars.MANAGED_IDENTITY_APPLICATION_ID }}" `
+            -TenantId "${{ secrets.POWER_PLATFORM_TENANT_ID }}" `
+            -AccessToken $tokenResponse.access_token `
+            -AssociatePackage
+          Write-Host "::endgroup::"
+
+      - name: Deployment summary
+        if: always()
+        shell: pwsh
+        run: |
+          @"
+          ## CD deployment summary
+
+          - **Target environment**: `${{ env.TARGET_ENV }}`
+          - **Dataverse URL**: `${{ vars.POWER_PLATFORM_ENV_URL }}`
+          - **Deployment settings**: `${{ env.DEPLOYMENT_SETTINGS_FILE }}`
+          - **Managed Identity App ID**: `${{ vars.MANAGED_IDENTITY_APPLICATION_ID }}`
+          - **Dataverse ManagedIdentity GUID**: `${{ vars.DATAVERSE_MANAGED_IDENTITY_GUID }}`
+          - **Job status**: `${{ job.status }}`
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append

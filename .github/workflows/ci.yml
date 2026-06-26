@@ -1,0 +1,119 @@
+name: CI - Build & Sign Plugin
+
+# Validation build on every push/PR to main (and on demand): restore -> MSBuild (strong-named)
+# -> pack .nupkg -> sign the package. No artifact upload (CI is validation only; the CD produces
+# its own signed package). Runs in the DEV environment so the env-scoped code-signing secret is
+# available, on a self-hosted Windows runner (.NET Framework 4.6.2 + MSBuild require Windows).
+
+on:
+  # Only build/sign when the PLUGIN actually changes. Solution-only syncs (the export-solution
+  # PR on solution-sync/DEV touches solutions/** only) don't need a plugin build, so they are
+  # filtered out here. workflow_dispatch always runs (no path filter).
+  push:
+    branches: [main]
+    paths:
+      - 'src/SecureOutboundPlugin/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/SecureOutboundPlugin/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    # DEV holds the env-scoped CODE_SIGN_PFX_BASE64 / CODE_SIGN_PFX_PASSWORD secrets so the build
+    # can Authenticode-sign the package.
+    environment: DEV
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      CONFIGURATION: Release
+      PROJECT: src/SecureOutboundPlugin/SecureOutboundPlugin.csproj
+      NUSPEC: src/SecureOutboundPlugin/SecureOutboundPlugin.nuspec
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The strong-name key (.snk) is NOT a secret — it provides assembly identity, not security —
+      # so it is committed and consumed by the csproj's <AssemblyOriginatorKeyFile>.
+      - name: Verify strong-name key is present
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "src/SecureOutboundPlugin/SecureOutboundPlugin.snk")) {
+            throw "SecureOutboundPlugin.snk not found. Generate it once with 'sn -k SecureOutboundPlugin.snk' and commit it (it is not a secret)."
+          }
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore src/SecureOutboundPlugin/packages.config -PackagesDirectory packages
+
+      - name: Build (Release, strong-named)
+        run: msbuild ${{ env.PROJECT }} /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=AnyCPU /m
+
+      - name: Pack plugin NuGet package
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${{ env.NUSPEC }}")) {
+            throw "SecureOutboundPlugin.nuspec not found at ${{ env.NUSPEC }}."
+          }
+          nuget pack "${{ env.NUSPEC }}" -OutputDirectory out/plugin -Properties Configuration=${{ env.CONFIGURATION }}
+          $pkg = Get-ChildItem out/plugin -Filter *.nupkg | Select-Object -First 1
+          if (-not $pkg) { throw "nuget pack produced no .nupkg." }
+          Write-Host "Produced: $($pkg.FullName)"
+
+      # --- NuGet package signing ----------------------------------------------------------
+      # Decode the code-signing certificate from a secret into a temp .pfx, sign the .nupkg with
+      # a timestamp, then delete the .pfx. SKIPPED (not failed) when the secret is absent, so
+      # build + package validation still produce a green check.
+      - name: Detect code-signing secret
+        id: signcfg
+        shell: pwsh
+        env:
+          PFX_BASE64: ${{ secrets.CODE_SIGN_PFX_BASE64 }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PFX_BASE64)) {
+            Write-Host "::warning::CODE_SIGN_PFX_BASE64 is not set - skipping NuGet package signing. Build and pack are still validated."
+            "enabled=false" >> $env:GITHUB_OUTPUT
+          } else {
+            "enabled=true" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Restore code-signing certificate
+        if: steps.signcfg.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          PFX_BASE64: ${{ secrets.CODE_SIGN_PFX_BASE64 }}
+        run: |
+          [IO.File]::WriteAllBytes("codesign.pfx", [Convert]::FromBase64String($env:PFX_BASE64))
+
+      - name: Sign plugin NuGet package
+        if: steps.signcfg.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          PFX_PASSWORD: ${{ secrets.CODE_SIGN_PFX_PASSWORD }}
+        run: |
+          $pkg = Get-ChildItem out/plugin -Filter *.nupkg | Select-Object -First 1
+          if (-not $pkg) { throw "No .nupkg found to sign." }
+          if ([string]::IsNullOrWhiteSpace($env:PFX_PASSWORD)) {
+            throw "CODE_SIGN_PFX_PASSWORD is required when CODE_SIGN_PFX_BASE64 is configured."
+          }
+          nuget sign $pkg.FullName `
+            -CertificatePath "codesign.pfx" `
+            -CertificatePassword $env:PFX_PASSWORD `
+            -Timestamper "http://timestamp.digicert.com"
+
+      - name: Remove certificate from runner
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Force -ErrorAction SilentlyContinue codesign.pfx
+
+      # No artifact upload: CI is validation only; the CD builds its own signed package.

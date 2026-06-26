@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AppModule>
+  <UniqueName>adc_SecureOutboundIntegration</UniqueName>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <WebResourceId>cdc2c76e-c961-f111-a826-7ced8d40af46</WebResourceId>
+  <OptimizedFor></OptimizedFor>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+  <FormFactor>1</FormFactor>
+  <ClientType>4</ClientType>
+  <NavigationType>0</NavigationType>
+  <AppModuleComponents>
+    <AppModuleComponent type="1" schemaName="account" />
+    <AppModuleComponent type="1" schemaName="contact" />
+    <AppModuleComponent type="1" schemaName="environmentvariabledefinition" />
+    <AppModuleComponent type="60" id="{69cff312-cfb6-4289-9631-249ab85d2c62}" />
+    <AppModuleComponent type="60" id="{2205c86d-ed88-4a2f-a447-3b86a8781f2e}" />
+    <AppModuleComponent type="60" id="{48028ae0-bf87-48c9-adf6-3dc9f29d7661}" />
+    <AppModuleComponent type="60" id="{3f027a28-8a61-f111-a826-70a8a57e51c1}" />
+    <AppModuleComponent type="60" id="{fb65cc73-181c-468b-9bb3-82ecde306991}" />
+    <AppModuleComponent type="60" id="{098ae145-1567-41ec-8398-86dbaac70c9b}" />
+    <AppModuleComponent type="60" id="{43300723-f867-420b-ab28-976a4d12e6c4}" />
+    <AppModuleComponent type="60" id="{b028db32-3619-48a5-ac51-cf3f947b0ef3}" />
+    <AppModuleComponent type="60" id="{e9a9c8a9-e94d-47a9-a6c3-ec37ddb83b99}" />
+    <AppModuleComponent type="60" id="{76b81f10-2a08-4f1a-9454-ee38bea94eb5}" />
+    <AppModuleComponent type="60" id="{c9e7ec2d-efca-4e4c-b3e3-f63c4bba5e4b}" />
+    <AppModuleComponent type="62" schemaName="adc_SecureOutboundIntegration" />
+  </AppModuleComponents>
+  <AppModuleRoleMaps>
+    <Role id="{627090ff-40a3-4053-8790-584edc5be201}" />
+    <Role id="{119f245c-3cc8-4b62-b31c-d1a046ced15d}" />
+  </AppModuleRoleMaps>
+  <LocalizedNames>
+    <LocalizedName description="Secure Outbound Integration" languagecode="1033" />
+  </LocalizedNames>
+  <Descriptions>
+    <Description description="Streamline and secure the management of outbound integrations by centralizing account and contact information in one place. Empower users to efficiently access and organize customer data while maintaining robust control over sensitive information." languagecode="1033" />
+  </Descriptions>
+  <appelements>
+    <appelement uniquename="adc_adc_SecureOutboundIntegration_name_adc_SecureOutboundIntegration_MCPServer">
+      <iscustomizable>1</iscustomizable>
+      <name>Secure Outbound Integration MCP Server</name>
+      <objectid>
+        <name>adc_SecureOutboundIntegration_MCPServer</name>
+      </objectid>
+      <objectidtype>mcpserver</objectidtype>
+    </appelement>
+  </appelements>
+  <appsettings>
+    <appsetting settingdefinitionid.uniquename="AppChannel">
+      <iscustomizable>1</iscustomizable>
+      <value>1</value>
+    </appsetting>
+    <appsetting settingdefinitionid.uniquename="EnableRoleBasedOfflineProfileAccess">
+      <iscustomizable>1</iscustomizable>
+      <value>true</value>
+    </appsetting>
+    <appsetting settingdefinitionid.uniquename="HeaderAndNavigationRefresh">
+      <iscustomizable>1</iscustomizable>
+      <value>2</value>
+    </appsetting>
+    <appsetting settingdefinitionid.uniquename="IsSmartEmailAddressValidationControlEnabled">
+      <iscustomizable>1</iscustomizable>
+      <value>true</value>
+    </appsetting>
+    <appsetting settingdefinitionid.uniquename="m365copilotmodelappenabled">
+      <iscustomizable>1</iscustomizable>
+      <value>2</value>
+    </appsetting>
+    <appsetting settingdefinitionid.uniquename="msdyn_TimelineModernization">
+      <iscustomizable>1</iscustomizable>
+      <value>true</value>
+    </appsetting>
+    <appsetting settingdefinitionid.uniquename="ServerMode">
+      <iscustomizable>1</iscustomizable>
+      <value>false</value>
+    </appsetting>
+  </appsettings>
+</AppModule>
