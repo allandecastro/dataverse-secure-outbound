@@ -225,6 +225,8 @@ jobs:
           deployment-settings-file: ${{ env.DEPLOYMENT_SETTINGS_FILE }}
           force-overwrite: true
           publish-changes: true
+          async-operation: true
+          max-async-wait-time: 60
 
       # A fresh solution install does not reliably carry the plug-in-package -> managedidentity
       # binding, so bind it explicitly here (idempotent). Without it the plug-in fails at runtime
