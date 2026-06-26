@@ -24,6 +24,8 @@ on:
 jobs:
   build:
     runs-on: self-hosted
+    # Public repo + self-hosted runner: never run untrusted fork-PR code on the runner.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     # DEV holds the env-scoped CODE_SIGN_PFX_BASE64 / CODE_SIGN_PFX_PASSWORD secrets so the build
     # can Authenticode-sign the package.
     environment: DEV

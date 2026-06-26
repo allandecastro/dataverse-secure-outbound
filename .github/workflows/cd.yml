@@ -27,7 +27,7 @@ on:
 
 jobs:
   deploy:
-    if: github.event_name != 'pull_request' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'solution-sync/DEV'))
+    if: github.event_name != 'pull_request' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'solution-sync/DEV') && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: self-hosted
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'SIT' }}
 
