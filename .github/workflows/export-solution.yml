@@ -32,6 +32,9 @@ jobs:
           git config --local core.autocrlf false
           git config --local core.eol lf
 
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
       - name: Install Power Platform CLI
         uses: microsoft/powerplatform-actions/actions-install@v1
 
