@@ -22,7 +22,7 @@ on:
         description: Target environment
         type: choice
         required: true
-        options: [DEV, SIT]
+        options: [DEV, SIT, DEMO2]
         default: DEV
 
 jobs:

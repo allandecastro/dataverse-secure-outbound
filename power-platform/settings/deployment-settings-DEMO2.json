@@ -1,0 +1,17 @@
+{
+  "EnvironmentVariables": [
+    {
+      "SchemaName": "adc_KeyVaultUrl",
+      "Value": "https://kv-secure-outbound-demo.vault.azure.net/"
+    },
+    {
+      "SchemaName": "adc_KeyVaultAccountSecretName",
+      "Value": "AccountSecret"
+    },
+    {
+      "SchemaName": "adc_ErpApiUrl",
+      "Value": "https://func-secure-outbound-demo.azurewebsites.net/api/erp/account-sync"
+    }
+  ],
+  "ConnectionReferences": []
+}
