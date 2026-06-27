@@ -6,7 +6,7 @@ name: CD - Pack & Import Solution
 # PREREQUISITES — the run fails fast with a clear message if any of these are missing:
 #   1. solutions/SecureOutboundIntegration/ and solutions/SecureOutboundIntegration_managed/
 #      must be populated (run export-solution.yml and merge its PR).
-#   2. For each GitHub Environment (DEV / SIT) add:
+#   2. For each GitHub Environment (DEV / SIT / DEMO2) add:
 #        Secrets : POWER_PLATFORM_CLIENT_ID, POWER_PLATFORM_CLIENT_SECRET,
 #                  POWER_PLATFORM_TENANT_ID, CODE_SIGN_PFX_BASE64, CODE_SIGN_PFX_PASSWORD
 #        Variables: POWER_PLATFORM_ENV_URL
@@ -19,22 +19,48 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: Target environment
+        description: Target environment(s)
         type: choice
         required: true
-        options: [DEV, SIT, DEMO2]
-        default: DEV
+        options: [SIT+DEMO2, SIT, DEMO2, DEV]
+        default: SIT+DEMO2
 
 jobs:
-  deploy:
+  # Lightweight, runs on a free GitHub-hosted runner (public repo): decide which environments
+  # to deploy to. A merged solution-sync/DEV PR deploys to BOTH SIT and DEMO2; a manual run
+  # honours the chosen target (or both for "SIT+DEMO2").
+  setup:
     if: github.event_name != 'pull_request' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'solution-sync/DEV') && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.compute.outputs.targets }}
+    steps:
+      - name: Compute deployment targets
+        id: compute
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ inputs.target }}" in
+              "SIT+DEMO2") echo 'targets=["SIT","DEMO2"]' >> "$GITHUB_OUTPUT" ;;
+              *)           echo "targets=[\"${{ inputs.target }}\"]" >> "$GITHUB_OUTPUT" ;;
+            esac
+          else
+            echo 'targets=["SIT","DEMO2"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: setup
     runs-on: self-hosted
-    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'SIT' }}
+    # One self-hosted runner => the two targets run back-to-back, not truly in parallel.
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.setup.outputs.targets) }}
+    environment: ${{ matrix.target }}
 
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'SIT' }}
-      DEPLOYMENT_SETTINGS_FILE: power-platform/settings/deployment-settings-${{ github.event_name == 'workflow_dispatch' && inputs.target || 'SIT' }}.json
+      TARGET_ENV: ${{ matrix.target }}
+      DEPLOYMENT_SETTINGS_FILE: power-platform/settings/deployment-settings-${{ matrix.target }}.json
       CONFIGURATION: Release
       PROJECT: src/SecureOutboundPlugin/SecureOutboundPlugin.csproj
       ASSEMBLY: src/SecureOutboundPlugin/bin/Release/SecureOutboundPlugin.dll
