@@ -1,7 +1,7 @@
 # solutions/
 
 Source-controlled **unpacked Dataverse solution(s)**. The exported solution `.zip` is unpacked
-here so it is human-diffable in pull requests — components (the plugin assembly/package registration,
+here so it is human-diffable in pull requests - components (the plugin assembly/package registration,
 the SDK message step, the environment-variable *definitions*, the `adc_usekeyvault` / `adc_usefunction`
 boolean columns and the `adc_result` column, etc.) live as individual XML files instead of an opaque binary.
 
@@ -38,7 +38,7 @@ solutions/
 
 ## CD
 
-`.github/workflows/cd.yml` packs `solutions/SecureOutboundIntegration_managed`, then imports it — see
+`.github/workflows/cd.yml` packs `solutions/SecureOutboundIntegration_managed`, then imports it - see
 the CD section in [`../Setup-Instructions.md`](../Setup-Instructions.md). The `managedidentity` record
 is provisioned separately (it is not part of the solution); CD runs
 `scripts/managed-identity/Provision-ManagedIdentityDataverseRecord.ps1` after import to ensure the

@@ -1,7 +1,7 @@
-# Secure Outbound Plugin (Dataverse — Identity + Network)
+# Secure Outbound Plugin (Dataverse - Identity + Network)
 
 A Microsoft Dynamics 365 / Dataverse **cloud plug-in** that demonstrates a secure outbound channel
-along its **two pillars** — **Identity** and **Network** — with **no secrets in configuration**:
+along its **two pillars** - **Identity** and **Network** - with **no secrets in configuration**:
 
 - **Identity:** the plug-in authenticates with a **Managed Identity** (`IManagedIdentityService`)
   and reads a secret from **Azure Key Vault** (RBAC, no stored credential).
@@ -15,8 +15,8 @@ solution run in **two environments**, each demonstrating one pillar (and failing
 
 |                                   | ☑️ `adc_usekeyvault`                        | ☑️ `adc_usefunction`                            |
 |-----------------------------------|---------------------------------------------|-------------------------------------------------|
-| **demo1 — Identity (no VNet)**    | ✅ secret read via Managed Identity          | ❌ private Function not reachable               |
-| **demo2 — Network (VNet)**        | ❌ Key Vault is outside the VNet (NSG)       | ✅ Function reached through the injected subnet |
+| **demo1 - Identity (no VNet)**    | ✅ secret read via Managed Identity          | ❌ private Function not reachable               |
+| **demo2 - Network (VNet)**        | ❌ Key Vault is outside the VNet (NSG)       | ✅ Function reached through the injected subnet |
 
 ### Architecture at a glance
 
@@ -26,12 +26,12 @@ flowchart LR
         P["AccountPlugin<br/>demo1 = Identity · demo2 = Network"]
     end
 
-    subgraph IDP["Identity pillar — who"]
+    subgraph IDP["Identity pillar - who"]
         FIC["Microsoft Entra ID<br/>Federated Identity Credential"]
         MI["User-Assigned<br/>Managed Identity"]
     end
 
-    subgraph NETP["Network pillar — where · VNet"]
+    subgraph NETP["Network pillar - where · VNet"]
         EP["Enterprise Policy<br/>subnet injection"]
         SN["snet-ppinject<br/>+ NSG: Deny Internet"]
         PE["Private Endpoint"]
@@ -65,7 +65,7 @@ flowchart LR
 - **demo1** (no VNet) uses the top flow → KV ✅ / Function ❌. **demo2** (VNet) uses the bottom flow →
   Function ✅ / KV ❌.
 
-### Sequence — demo1 (Identity, no VNet)
+### Sequence - demo1 (Identity, no VNet)
 
 ```mermaid
 sequenceDiagram
@@ -83,7 +83,7 @@ sequenceDiagram
     Note over DV,KV: public egress reaches the vault. A Function call would hit 403 ❌
 ```
 
-### Sequence — demo2 (Network, VNet)
+### Sequence - demo2 (Network, VNet)
 
 ```mermaid
 sequenceDiagram
@@ -128,18 +128,18 @@ Registered on **Account → Update → Post-Operation (Synchronous)**, filtered 
 
 ## Prerequisites
 
-- **Two** Dynamics 365 / Power Platform environments (System Administrator) — one per pillar.
+- **Two** Dynamics 365 / Power Platform environments (System Administrator) - one per pillar.
 - An **Azure subscription** (rights to create RG, Managed Identity, Key Vault, VNet + private
   Function, and to assign RBAC).
 - **Visual Studio 2019/2022** with the **.NET Framework 4.6.2** developer pack (the plug-in is net462).
 - **Plug-in Registration Tool** (NuGet `Microsoft.CrmSdk.XrmTooling.PluginRegistrationTool`) or `pac`.
 - Plug-in **Managed Identity** enabled/federated on the tenant.
-- A strong-name key `SecureOutboundPlugin.snk` (committed — identity, not a secret; **optional** for a
-  plug-in *package*, kept here — see Step 2). The **code-signing certificate** is what actually matters.
+- A strong-name key `SecureOutboundPlugin.snk` (committed - identity, not a secret; **optional** for a
+  plug-in *package*, kept here - see Step 2). The **code-signing certificate** is what actually matters.
 
 ---
 
-## Step 1 — The code-signing certificate
+## Step 1 - The code-signing certificate
 
 Plug-in **Managed Identity** binds the plug-in to an identity via a **Federated Identity Credential
 (FIC)** whose subject embeds the **SHA-256 of the signing certificate**. So the assembly must be
@@ -164,7 +164,7 @@ FIC subject (SHA-256). **Never commit the `.pfx`** (it's gitignored).
 
 Microsoft's guidance: a **self-signed** certificate is fine for **dev/test**, but **production** should
 be signed with a certificate from a **trusted Certificate Authority**. So the certificate can differ
-**per tier** — and that's handled entirely in the pipeline, because `CODE_SIGN_PFX_BASE64` is a
+**per tier** - and that's handled entirely in the pipeline, because `CODE_SIGN_PFX_BASE64` is a
 **per-GitHub-Environment secret** (put the self-signed cert in `DEV`/`SIT`, the CA cert in `PROD`).
 
 > ⚠️ **The FIC must match the certificate used for that environment.** Because the cert's SHA-256 is in
@@ -176,19 +176,19 @@ be signed with a certificate from a **trusted Certificate Authority**. So the ce
 
 ---
 
-## Step 2 — Build & signing
+## Step 2 - Build & signing
 
 The plug-in targets **.NET Framework 4.6.2** with `packages.config`, so it builds with **MSBuild on
-Windows** (Visual Studio). There are **two different signatures** — don't confuse them:
+Windows** (Visual Studio). There are **two different signatures** - don't confuse them:
 
 ### Two signatures, two reasons
 
 | Signature | Key | Required here? | Why |
 |---|---|---|---|
-| **Strong-name** | `.snk` | **Optional** for a plug-in *package* | Per Microsoft's [Build and package plug-in code](https://learn.microsoft.com/power-apps/developer/data-platform/build-and-package): *"Signed assemblies aren't required … with plug-in assemblies in a plug-in package, the assemblies load on the sandbox server by using a different mechanism, so signing isn't necessary."* We keep it (identity, harmless). **Caveat:** if you strong-name, *all* dependencies must be strong-named too — the official Azure SDK / Newtonsoft already are. |
+| **Strong-name** | `.snk` | **Optional** for a plug-in *package* | Per Microsoft's [Build and package plug-in code](https://learn.microsoft.com/power-apps/developer/data-platform/build-and-package): *"Signed assemblies aren't required … with plug-in assemblies in a plug-in package, the assemblies load on the sandbox server by using a different mechanism, so signing isn't necessary."* We keep it (identity, harmless). **Caveat:** if you strong-name, *all* dependencies must be strong-named too - the official Azure SDK / Newtonsoft already are. |
 | **Authenticode** | `.pfx` | **Required** in *this* project | Nothing to do with the package: it's the **Managed Identity** requirement. The **SHA-256 of this certificate is embedded in the FIC subject**, so Dataverse only accepts the MI binding if the assembly is Authenticode-signed with that exact cert. |
 
-> In short: the Microsoft docs say strong-naming isn't needed for a plug-in *package* — true. But
+> In short: the Microsoft docs say strong-naming isn't needed for a plug-in *package* - true. But
 > Authenticode signing **is** needed here, not for packaging, for **Managed Identity**: the certificate's
 > hash lives in the Federated Identity Credential.
 
@@ -201,7 +201,7 @@ the build, **only if signing inputs are found** (and **only when not in CI**):
 - `PackPlugin` → `nuget pack` → produces the **`.nupkg`**.
 - `SignPluginPackageLocal` (after `PackPlugin`) → `scripts/Sign-NuGetPackage.ps1` → signs the **`.nupkg`**.
 
-If no signing input is found, the targets are **inert** (build succeeds, unsigned) — nobody is blocked.
+If no signing input is found, the targets are **inert** (build succeeds, unsigned) - nobody is blocked.
 
 ### The 3 ways to provide the certificate (+ auto-detect)
 
@@ -211,7 +211,7 @@ gitignored). Pick **one**:
 | # | Option | What you set | Secret on disk? |
 |---|---|---|---|
 | **A** | **PFX + password** | `<CodeSignPfxPath>` + `<CodeSignPfxPassword>` | password in the (gitignored) local file |
-| **B** | **PFX + Windows Credential Manager** | `<CodeSignPfxPath>` + `<CodeSignPfxCredentialTarget>` | **no** — password read from the Windows credential store |
+| **B** | **PFX + Windows Credential Manager** | `<CodeSignPfxPath>` + `<CodeSignPfxCredentialTarget>` | **no** - password read from the Windows credential store |
 | **C** | **Thumbprint** | `<CodeSignThumbprint>` (cert already installed in your Windows store) | **no PFX at all** |
 
 **Auto-detect:** if you drop the PFX at `src/SecureOutboundPlugin/certs/SecureOutboundPluginSigning.pfx`,
@@ -221,7 +221,7 @@ the csproj picks it up **without** setting `<CodeSignPfxPath>`.
 
 The csproj resolves two things, in this exact order:
 
-- **Certificate:** `1.` `<CodeSignThumbprint>` (if set, **wins** — the PFX is ignored) → `2.` explicit
+- **Certificate:** `1.` `<CodeSignThumbprint>` (if set, **wins** - the PFX is ignored) → `2.` explicit
   `<CodeSignPfxPath>` → `3.` auto-detected `certs/SecureOutboundPluginSigning.pfx`. None → signing is inert.
 - **Password** (only when a PFX is used): `1.` explicit `<CodeSignPfxPassword>` → `2.` env var
   **`SECUREOUTBOUND_PFX_PASSWORD`** → `3.` Windows Credential Manager target `<CodeSignPfxCredentialTarget>`
@@ -246,21 +246,21 @@ $env:SECUREOUTBOUND_PFX_PASSWORD = "<password>"
 ```
 
 For **Option B** (no plaintext at all), store the password once in the Windows vault under the target
-name the csproj expects — the signing script reads it via `CredRead`:
+name the csproj expects - the signing script reads it via `CredRead`:
 
 ```powershell
 cmdkey /generic:SecureOutboundPlugin.CodeSign /user:pfx /pass:"<password>"
 ```
 
-> ⚠️ An env var is visible to other processes and can leak into logs — prefer **Credential Manager**
+> ⚠️ An env var is visible to other processes and can leak into logs - prefer **Credential Manager**
 > (Option B) or a **thumbprint** (Option C); use `SECUREOUTBOUND_PFX_PASSWORD` for quick local convenience.
 
 **Which is best?**
-- 🥇 **Option C (thumbprint)** — cleanest: **no `.pfx` and no password on disk**, the cert lives in your
+- 🥇 **Option C (thumbprint)** - cleanest: **no `.pfx` and no password on disk**, the cert lives in your
   Windows certificate store. Best for a developer machine.
-- 🥈 **Option B (PFX in `certs/` + Credential Manager)** — if you must ship a `.pfx`: it's auto-detected
+- 🥈 **Option B (PFX in `certs/` + Credential Manager)** - if you must ship a `.pfx`: it's auto-detected
   and the password never appears in plaintext.
-- 🥉 **Option A (PFX + password in `signing.local.props`)** — simplest to set up for a quick local demo;
+- 🥉 **Option A (PFX + password in `signing.local.props`)** - simplest to set up for a quick local demo;
   the password is in a gitignored file, never committed.
 
 ### The `certs/` folder & .gitignore (nothing secret is committed)
@@ -275,25 +275,25 @@ cmdkey /generic:SecureOutboundPlugin.CodeSign /user:pfx /pass:"<password>"
 The local targets are **disabled under `GITHUB_ACTIONS` / `TF_BUILD`** so they never clash with the
 pipeline. Instead the pipeline keys off the **`CODE_SIGN_PFX_BASE64`** secret:
 
-- **CI** (`ci.yml`) — a *"Detect code-signing secret"* step sets `enabled=true/false`:
+- **CI** (`ci.yml`) - a *"Detect code-signing secret"* step sets `enabled=true/false`:
   - secret **present** → write a temp `codesign.pfx` from the base64, `nuget sign` the `.nupkg`
     (DigiCert timestamp), then **delete** the `.pfx` (`if: always()`).
-  - secret **absent** → **skip with a `::warning::`** (build & pack stay green) — so forks/PRs without
+  - secret **absent** → **skip with a `::warning::`** (build & pack stay green) - so forks/PRs without
     the secret still validate.
-- **CD** (`cd.yml`) — signing is **required**: it **fails fast** if the secret is missing, then
+- **CD** (`cd.yml`) - signing is **required**: it **fails fast** if the secret is missing, then
   **signs the DLL** (`signtool sign /fd SHA256 /tr …`) **and** the `.nupkg` (`nuget sign`), and deletes
   the cert at the end. The same base64 secret = the same certificate as the FIC.
 
 ### Deploy as a Plug-in Package (`.nupkg`)
 
 Because the plug-in pulls in the Azure SDK (`Azure.Identity`, `Azure.Security.KeyVault.Secrets`),
-deploy it **as a Plug-in Package** so the dependency tree travels with the assembly — **no ILMerge**
+deploy it **as a Plug-in Package** so the dependency tree travels with the assembly - **no ILMerge**
 (Microsoft's dependent-assemblies capability). `nuget pack SecureOutboundPlugin.nuspec` produces the
 package; register it via the Plug-in Registration Tool, `pac plugin push`, or the CD pipeline.
 
 ---
 
-## Step 3 — Azure resources (Managed Identity + Key Vault + FIC + RBAC)
+## Step 3 - Azure resources (Managed Identity + Key Vault + FIC + RBAC)
 
 `scripts/Setup-AzureResources.ps1` provisions, **per environment**: Resource Group, a
 **User-Assigned Managed Identity**, a **Key Vault** (RBAC), the **FIC** that lets Dataverse
@@ -311,22 +311,22 @@ az login
 ```
 
 Key facts:
-- The **FIC subject** is `…/n/plugin/e/{environmentId}/h/{sha256OfCert}` — it ties the MI to a
+- The **FIC subject** is `…/n/plugin/e/{environmentId}/h/{sha256OfCert}` - it ties the MI to a
   *specific Dataverse environment* and a *specific signing certificate*. Issuer
   `https://login.microsoftonline.com/{tenant}/v2.0`, audience `api://AzureADTokenExchange`.
-- **One MI can hold several FICs** — one per Dataverse environment that should use it (e.g. a shared
+- **One MI can hold several FICs** - one per Dataverse environment that should use it (e.g. a shared
   MI federated to both demo1 and demo2, each with its own FIC subject).
 - Create the demo secret afterwards:
   `az keyvault secret set --vault-name <kv> --name AccountSecret --value "Hello-From-KeyVault-Demo"`.
 
 ---
 
-## Step 4 — The Dataverse `managedidentity` record (+ package link)
+## Step 4 - The Dataverse `managedidentity` record (+ package link)
 
 Plug-in Managed Identity needs a **`managedidentity` record** in Dataverse, and the **plug-in package
 must be associated** to it.
 
-- **Record** — created at a **fixed GUID** (reused across environments so the operation is identical
+- **Record** - created at a **fixed GUID** (reused across environments so the operation is identical
   everywhere) carrying the MI's `applicationid` (client ID), `tenantid`, `credentialsource=2`,
   `subjectscope=1`, `version=1`:
   ```powershell
@@ -335,15 +335,15 @@ must be associated** to it.
     -DataverseRecordManagedIdentityId "<fixed-mi-guid>" `
     -ApplicationId "<mi-client-id>" -TenantId "<tenant>"
   ```
-- **Link** — the `pluginpackage` (and `pluginassembly`) must reference that record
+- **Link** - the `pluginpackage` (and `pluginassembly`) must reference that record
   (`managedidentityid`). When you register the package with a managed identity in the maker portal /
   PRT, this link is set and travels with the solution. If the link is missing at runtime you get
-  *"PluginPackage … is not associated to a Managed identity"* — reconcile it (Web API
+  *"PluginPackage … is not associated to a Managed identity"* - reconcile it (Web API
   `PATCH pluginpackages(<id>) {"managedidentityid@odata.bind":"/managedidentities(<guid>)"}`).
 
 ---
 
-## Step 5 — The Dataverse solution (`SecureOutboundIntegration`)
+## Step 5 - The Dataverse solution (`SecureOutboundIntegration`)
 
 Add to the `SecureOutboundIntegration` solution (publisher prefix `adc_`):
 
@@ -351,19 +351,19 @@ Add to the `SecureOutboundIntegration` solution (publisher prefix `adc_`):
 |---|---|---|
 | Boolean | `adc_usekeyvault` | Two Options, default **No** |
 | Boolean | `adc_usefunction` | Two Options, default **No** |
-| Text | `adc_result` | Single line, max 850 — receives the secret **or** the Function response |
+| Text | `adc_result` | Single line, max 850 - receives the secret **or** the Function response |
 | Env var | `adc_KeyVaultUrl` | String |
 | Env var | `adc_KeyVaultAccountSecretName` | String (`AccountSecret`) |
 | Env var | `adc_ErpApiUrl` | String (the Function URL) |
 | Plug-in package | `adc_SecureOutboundPlugin` | the signed `.nupkg` |
 | SDK step | Account Update Post-Op | filter `adc_usekeyvault,adc_usefunction`, Post-Image `accountid,name,accountnumber` |
 
-> Schema names **cannot be renamed** later — create the fields fresh. Add the three fields + `adc_crmnumber`
+> Schema names **cannot be renamed** later - create the fields fresh. Add the three fields + `adc_crmnumber`
 > (or `accountnumber`) to the Account form so you can tick the boxes and see `adc_result`.
 
 ---
 
-## Step 6 — Demo 1 (Identity, **no** VNet)
+## Step 6 - Demo 1 (Identity, **no** VNet)
 
 The environment runs with normal (public) egress. The Managed Identity reads the public Key Vault.
 
@@ -373,39 +373,39 @@ The environment runs with normal (public) egress. The Managed Identity reads the
 3. Import the solution + ensure the package→MI link.
 
 **Run:** open an Account → tick **Use Key Vault** → Save → `adc_result` shows the secret (Identity ✅).
-Tick **Use Function** → it fails (the private Function rejects public access — Network ❌).
+Tick **Use Function** → it fails (the private Function rejects public access - Network ❌).
 
 ---
 
-## Step 7 — Demo 2 (Network, **VNet** / subnet injection)
+## Step 7 - Demo 2 (Network, **VNet** / subnet injection)
 
 The environment is injected into a VNet; the plug-in reaches the **private** Function but **not** the
 public Key Vault (blocked by NSG). Provision with `scripts/Provision-Demo2-Network.ps1`, or the
 building blocks:
 
-1. **Private Function + VNet** — `scripts/vnet/Setup-FunctionPrivateEndpoint.ps1 -DisablePublicNetworkAccess $true`
+1. **Private Function + VNet** - `scripts/vnet/Setup-FunctionPrivateEndpoint.ps1 -DisablePublicNetworkAccess $true`
    creates the VNet, a **private-endpoint subnet**, an **injection subnet** (delegated to
    `Microsoft.PowerPlatform/enterprisePolicies`), the Function App (public access **OFF**), the
    private endpoint and the `privatelink.azurewebsites.net` private DNS zone linked to the VNet.
-2. **Identity must still work** — provision MI + FIC (for this env's GUID) + RBAC so the MI *token*
+2. **Identity must still work** - provision MI + FIC (for this env's GUID) + RBAC so the MI *token*
    succeeds; the Key Vault failure must be **network**, not identity. (A shared MI with a second FIC
    is fine.)
-3. **Subnet injection** — `scripts/vnet/Setup-PowerPlatformEnterprisePolicy.ps1 -EnvironmentId <demo2-env>`
+3. **Subnet injection** - `scripts/vnet/Setup-PowerPlatformEnterprisePolicy.ps1 -EnvironmentId <demo2-env>`
    creates the NetworkInjection **enterprise policy** (Europe needs delegated subnets in **both**
    paired regions: West + North Europe) and links it to the environment.
-4. **NSG (the boundary)** — on the injection subnet, an outbound rule **`Deny Internet`** (priority <
+4. **NSG (the boundary)** - on the injection subnet, an outbound rule **`Deny Internet`** (priority <
    the default `AllowInternetOutBound`) with `AllowVnetOutBound` left intact: the Function (private
    endpoint = VirtualNetwork) stays reachable, the Key Vault (public/Internet) becomes unreachable.
-5. **Do NOT** apply Entra platform auth on the Function (`Configure-FunctionAuth.ps1`) — the boundary
+5. **Do NOT** apply Entra platform auth on the Function (`Configure-FunctionAuth.ps1`) - the boundary
    shown here is the network; a demo bearer token is enough.
 
 ### Linking / unlinking the enterprise policy to an environment
 
 Two supported ways:
 
-- **Power Platform Admin Center (UI)** — easiest: open the environment → **Settings → Network /
+- **Power Platform Admin Center (UI)** - easiest: open the environment → **Settings → Network /
   Virtual network** → link (or unlink) the enterprise policy. No scripting.
-- **PowerShell** — the **`Microsoft.PowerPlatform.EnterprisePolicies`** module (the same one
+- **PowerShell** - the **`Microsoft.PowerPlatform.EnterprisePolicies`** module (the same one
   `Setup-PowerPlatformEnterprisePolicy.ps1` uses). It waits for the operation to finish on its own:
 
   ```powershell
@@ -419,12 +419,12 @@ Two supported ways:
   ```
 
 > The link/unlink also exists as a raw BAP REST call
-> (`POST …/environments/{id}/enterprisePolicies/NetworkInjection/link|unlink`) — that's the **internal
+> (`POST …/environments/{id}/enterprisePolicies/NetworkInjection/link|unlink`) - that's the **internal
 > API the module wraps**; prefer the UI or the module.
 
 > ⚠️ **Subnet injection propagation** = the plug-in **sandbox hosts are recycled** to attach to the
 > VNet. This takes **~30–60 min** after linking the policy (you'll briefly see *"no Sandbox Hosts
-> available"* — that's the recycle in progress). **Link the environment ahead of time**, not on demand —
+> available"* - that's the recycle in progress). **Link the environment ahead of time**, not on demand -
 > the wait is too long to be interactive. For a reliable setup, use **two pre-configured environments**
 > (one linked, one not) so no toggling is needed.
 
@@ -443,7 +443,7 @@ flowchart TB
     R2 -->|no match| R3["prio 65001 Allow Internet<br/>(never reached: denied at 200)"]
 ```
 
-**Why the Key Vault hangs — reject vs drop:**
+**Why the Key Vault hangs - reject vs drop:**
 
 ```mermaid
 flowchart TB
@@ -459,19 +459,19 @@ flowchart TB
 
 ---
 
-## Step 8 — CI/CD (GitHub Actions)
+## Step 8 - CI/CD (GitHub Actions)
 
 Three workflows under `.github/workflows/`:
 
-- **CI — `ci.yml`** (`self-hosted`, runs in the `DEV` environment for the signing secret):
+- **CI - `ci.yml`** (`self-hosted`, runs in the `DEV` environment for the signing secret):
   `nuget restore` → `msbuild` (strong-named) → `nuget pack` → `nuget sign` of the `.nupkg`
   (decodes `CODE_SIGN_PFX_BASE64` to a temp `.pfx`, signs with a DigiCert timestamp, deletes it).
   Signing is **skipped with a warning** (not a failure) when the secret is absent, so PR validation
-  stays green. No artifact upload — CI is validation only.
-- **Export — `export-solution.yml`** (manual): exports `SecureOutboundIntegration` from DEV (unmanaged
+  stays green. No artifact upload - CI is validation only.
+- **Export - `export-solution.yml`** (manual): exports `SecureOutboundIntegration` from DEV (unmanaged
   + managed), unpacks both trees into `solutions/`, bumps the version, opens a PR. This is how maker
   changes (fields, step, env-var definitions) get into git.
-- **CD — `cd.yml`** (`self-hosted`): on merge of a `solution-sync/DEV` PR, or manual `DEV`/`SIT`.
+- **CD - `cd.yml`** (`self-hosted`): on merge of a `solution-sync/DEV` PR, or manual `DEV`/`SIT`.
   Pre-flight checks → build → **Authenticode sign the DLL** (`signtool`, from `CODE_SIGN_PFX_BASE64`)
   → `nuget pack` → **sign the `.nupkg`** → **inject the signed package** into
   `solutions/SecureOutboundIntegration_managed/pluginpackages` → `pac` **pack** (Managed) →
@@ -483,15 +483,15 @@ Three workflows under `.github/workflows/`:
 The CD wires the Managed Identity in two `Provision-ManagedIdentityDataverseRecord.ps1` passes
 (each acquires a Dataverse token via client-credentials with the SPN secrets):
 
-1. **Before import** — upsert the **`managedidentity` record** at the **fixed GUID**
+1. **Before import** - upsert the **`managedidentity` record** at the **fixed GUID**
    (`DATAVERSE_MANAGED_IDENTITY_GUID`) with the per-environment **`applicationid`**
    (`MANAGED_IDENTITY_APPLICATION_ID`), `credentialsource=2`, `subjectscope=1`, `version=1`.
-2. **After import** — the same script with **`-AssociatePackage`** binds the imported
+2. **After import** - the same script with **`-AssociatePackage`** binds the imported
    `pluginpackage` (+ `pluginassembly`) to that record. A fresh install does **not** reliably carry
-   the package→identity link, so it is set explicitly here — otherwise the plug-in fails with
+   the package→identity link, so it is set explicitly here - otherwise the plug-in fails with
    *"PluginPackage … is not associated to a Managed identity"*. Idempotent.
 
-The managedidentity **record is not part of the solution** (it's per-environment data — embedding it
+The managedidentity **record is not part of the solution** (it's per-environment data - embedding it
 would overwrite each env's `applicationid` on import), and FIC creation/rotation stays in Azure
 provisioning (`Setup-AzureResources.ps1`), not in CD.
 
@@ -523,7 +523,7 @@ src/SecureOutboundPlugin/        net462 plug-in (strong-named; local DLL+nupkg s
   Services/ErpService.cs              outbound call to the Function App (demo token)
   Services/EnvironmentVariableService.cs
   signing.local.props.example    sample local Authenticode config (copy to signing.local.props)
-src/ErpMockFunction/             Azure Function (dotnet-isolated net8) — POST /api/erp/account-sync
+src/ErpMockFunction/             Azure Function (dotnet-isolated net8) - POST /api/erp/account-sync
 scripts/
   Setup-AzureResources.ps1                 RG + MI + Key Vault + FIC + RBAC
   Provision-Demo1-Identity.ps1             one-shot: identity env
@@ -532,7 +532,7 @@ scripts/
   managed-identity/Provision-ManagedIdentityDataverseRecord.ps1   upsert the managedidentity record
   vnet/Setup-FunctionPrivateEndpoint.ps1   VNet + private Function App
   vnet/Setup-PowerPlatformEnterprisePolicy.ps1   subnet injection enterprise policy
-  vnet/Configure-FunctionAuth.ps1          (optional) Entra platform auth — NOT used by the demo
+  vnet/Configure-FunctionAuth.ps1          (optional) Entra platform auth - NOT used by the demo
   vnet/Test-Connectivity.ps1               DNS/TCP/TLS diagnostics
 solutions/                       unpacked Dataverse solution (unmanaged + managed)
 .github/workflows/               ci.yml · export-solution.yml · cd.yml
@@ -545,18 +545,18 @@ power-platform/settings/         per-environment deployment settings (env-var va
 
 | Symptom | Cause / fix |
 |---|---|
-| Nothing happens on Save | The boolean wasn't in the Target — untick/re-tick and save. |
+| Nothing happens on Save | The boolean wasn't in the Target - untick/re-tick and save. |
 | *"… is not associated to a Managed identity"* | Link the plug-in package to the `managedidentity` record (Step 4). |
 | *"IManagedIdentityService returned an empty token"* | MI not enabled/federated, or FIC subject/cert hash mismatch. |
 | Key Vault HTTP 403 | **Demo 2 expected** (NSG/firewall). Otherwise: MI missing `Key Vault Secrets User`. |
 | Function 403 "Web App - Unavailable" | **Demo 1 expected** (private, no VNet). In Demo 2: check injection/PE/DNS. |
-| Key Vault hangs ~2 min | NSG drop + SDK retries — ensure the plug-in's short-timeout build is deployed. |
+| Key Vault hangs ~2 min | NSG drop + SDK retries - ensure the plug-in's short-timeout build is deployed. |
 | Assembly fails to load on registration | Deploy as a **Plug-in Package** (`.nupkg`), not a bare DLL. |
 
 ---
 
 ## Security note
 
-The plug-in **never logs the secret value** — only its length. The two pillars are independent:
+The plug-in **never logs the secret value** - only its length. The two pillars are independent:
 **Identity** answers *who* may call (Managed Identity, no stored secret), **Network** answers *from
 where* (private endpoint / VNet). A production design layers **both**.
