@@ -7,7 +7,7 @@ name: CI - Build & Sign Plugin
 
 on:
   # Only build/sign when the PLUGIN actually changes. Solution-only syncs (the export-solution
-  # PR on solution-sync/DEV touches solutions/** only) don't need a plugin build, so they are
+  # PR on solution-sync/DEV touches power-platform/solutions/** only) don't need a plugin build, so they are
   # filtered out here. workflow_dispatch always runs (no path filter).
   push:
     branches: [main]

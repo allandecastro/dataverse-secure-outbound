@@ -4,7 +4,7 @@ name: CD - Pack & Import Solution
 # Triggers automatically when the DEV solution-sync PR is merged into main, and can also be run manually.
 #
 # PREREQUISITES — the run fails fast with a clear message if any of these are missing:
-#   1. solutions/SecureOutboundIntegration/ and solutions/SecureOutboundIntegration_managed/
+#   1. power-platform/solutions/SecureOutboundIntegration/ and power-platform/solutions/SecureOutboundIntegration_managed/
 #      must be populated (run export-solution.yml and merge its PR).
 #   2. For each GitHub Environment (DEV / SIT / DEMO2) add:
 #        Secrets : POWER_PLATFORM_CLIENT_ID, POWER_PLATFORM_CLIENT_SECRET,
@@ -80,12 +80,12 @@ jobs:
           Write-Host "::notice::Deployment settings: ${{ env.DEPLOYMENT_SETTINGS_FILE }}"
           $errors = @()
 
-          if (-not (Test-Path "solutions/SecureOutboundIntegration/Other/Solution.xml")) {
-            $errors += "solutions/SecureOutboundIntegration/ is empty or missing. Run the export-solution workflow, merge its PR, then retry."
+          if (-not (Test-Path "power-platform/solutions/SecureOutboundIntegration/Other/Solution.xml")) {
+            $errors += "power-platform/solutions/SecureOutboundIntegration/ is empty or missing. Run the export-solution workflow, merge its PR, then retry."
           }
 
-          if (-not (Test-Path "solutions/SecureOutboundIntegration_managed/Other/Solution.xml")) {
-            $errors += "solutions/SecureOutboundIntegration_managed/ is empty or missing. Run the export-solution workflow, merge its PR, then retry."
+          if (-not (Test-Path "power-platform/solutions/SecureOutboundIntegration_managed/Other/Solution.xml")) {
+            $errors += "power-platform/solutions/SecureOutboundIntegration_managed/ is empty or missing. Run the export-solution workflow, merge its PR, then retry."
           }
 
           if (-not (Test-Path "${{ env.NUSPEC }}")) {
@@ -195,10 +195,10 @@ jobs:
         run: |
           Write-Host "::group::Inject package into managed solution"
           $pkg = Get-ChildItem out/plugin -Filter *.nupkg | Select-Object -First 1
-          $dest = Get-ChildItem solutions/SecureOutboundIntegration_managed/pluginpackages -Recurse -Filter *.nupkg `
+          $dest = Get-ChildItem power-platform/solutions/SecureOutboundIntegration_managed/pluginpackages -Recurse -Filter *.nupkg `
             -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $dest) {
-            throw "No .nupkg placeholder found under solutions/SecureOutboundIntegration_managed/pluginpackages. " +
+            throw "No .nupkg placeholder found under power-platform/solutions/SecureOutboundIntegration_managed/pluginpackages. " +
                   "Ensure the solution was exported after the plugin package was registered."
           }
           Copy-Item $pkg.FullName $dest.FullName -Force
@@ -212,7 +212,7 @@ jobs:
       - name: Pack solution (Managed)
         uses: microsoft/powerplatform-actions/pack-solution@v1
         with:
-          solution-folder: solutions/SecureOutboundIntegration_managed
+          solution-folder: power-platform/solutions/SecureOutboundIntegration_managed
           solution-file: out/SecureOutboundIntegration.zip
           solution-type: Managed
 

@@ -469,12 +469,12 @@ Three workflows under `.github/workflows/`:
   Signing is **skipped with a warning** (not a failure) when the secret is absent, so PR validation
   stays green. No artifact upload - CI is validation only.
 - **Export - `export-solution.yml`** (manual): exports `SecureOutboundIntegration` from DEV (unmanaged
-  + managed), unpacks both trees into `solutions/`, bumps the version, opens a PR. This is how maker
+  + managed), unpacks both trees into `power-platform/solutions/`, bumps the version, opens a PR. This is how maker
   changes (fields, step, env-var definitions) get into git.
 - **CD - `cd.yml`** (`self-hosted`): on merge of a `solution-sync/DEV` PR, or manual `DEV`/`SIT`.
   Pre-flight checks → build → **Authenticode sign the DLL** (`signtool`, from `CODE_SIGN_PFX_BASE64`)
   → `nuget pack` → **sign the `.nupkg`** → **inject the signed package** into
-  `solutions/SecureOutboundIntegration_managed/pluginpackages` → `pac` **pack** (Managed) →
+  `power-platform/solutions/SecureOutboundIntegration_managed/pluginpackages` → `pac` **pack** (Managed) →
   **ensure the Managed Identity record** (pre-import) → `pac` **import** (per-env deployment settings)
   → **associate the package with the Managed Identity** (post-import).
 
@@ -534,7 +534,7 @@ scripts/
   vnet/Setup-PowerPlatformEnterprisePolicy.ps1   subnet injection enterprise policy
   vnet/Configure-FunctionAuth.ps1          (optional) Entra platform auth - NOT used by the demo
   vnet/Test-Connectivity.ps1               DNS/TCP/TLS diagnostics
-solutions/                       unpacked Dataverse solution (unmanaged + managed)
+power-platform/solutions/                       unpacked Dataverse solution (unmanaged + managed)
 .github/workflows/               ci.yml · export-solution.yml · cd.yml
 power-platform/settings/         per-environment deployment settings (env-var values)
 ```

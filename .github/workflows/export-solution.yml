@@ -1,7 +1,7 @@
 name: CI - Export Solution from Dataverse
 
 # Pulls the SecureOutboundIntegration solution FROM DEV, unpacks it into the
-# source-controlled solutions/ folder, and opens a PR with the diff. This is how customizations
+# source-controlled power-platform/solutions/ folder, and opens a PR with the diff. This is how customizations
 # made in the maker portal (steps, env-var definitions, the column, etc.) get back into git.
 #
 # Manual-dispatch only. Uses the same per-environment GitHub Environment secrets as cd.yml.
@@ -100,7 +100,7 @@ jobs:
         uses: microsoft/powerplatform-actions/unpack-solution@v1
         with:
           solution-file: out/SecureOutboundIntegration-unmanaged.zip
-          solution-folder: solutions/SecureOutboundIntegration
+          solution-folder: power-platform/solutions/SecureOutboundIntegration
           solution-type: Unmanaged
           overwrite-files: true
 
@@ -120,7 +120,7 @@ jobs:
         uses: microsoft/powerplatform-actions/unpack-solution@v1
         with:
           solution-file: out/SecureOutboundIntegration-managed.zip
-          solution-folder: solutions/SecureOutboundIntegration_managed
+          solution-folder: power-platform/solutions/SecureOutboundIntegration_managed
           solution-type: Managed
           overwrite-files: true
 
@@ -139,10 +139,10 @@ jobs:
             Automated export of the **SecureOutboundIntegration** solution from `DEV`,
             version `${{ steps.version.outputs.number }}`,
             unpacked into:
-            - `solutions/SecureOutboundIntegration` (unmanaged)
-            - `solutions/SecureOutboundIntegration_managed` (managed)
+            - `power-platform/solutions/SecureOutboundIntegration` (unmanaged)
+            - `power-platform/solutions/SecureOutboundIntegration_managed` (managed)
 
             Review the diff to confirm the plugin step, environment-variable definitions, and the
             Account column came across as expected before merging.
-          add-paths: solutions/**
+          add-paths: power-platform/solutions/**
           delete-branch: true

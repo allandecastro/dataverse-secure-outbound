@@ -291,7 +291,7 @@ For each cell: open the Account → tick **one** checkbox → **Save** → open 
 
 This guide is the manual demo path. For the GitHub Actions **CI** (build + strong-name + optional
 Authenticode signing) and **CD** (build/sign DLL + `.nupkg` → inject package into
-`solutions/SecureOutboundIntegration_managed` → pack/import solution → link Managed Identity), see
+`power-platform/solutions/SecureOutboundIntegration_managed` → pack/import solution → link Managed Identity), see
 the **CI/CD** section of the [README](README.md#cicd).
 
 ---
