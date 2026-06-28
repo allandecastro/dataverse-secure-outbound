@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Ensures the Dataverse Managed Identity record exists at a FIXED GUID.
-  Idempotent — safe to re-run in any environment.
+  Idempotent - safe to re-run in any environment.
 
 .DESCRIPTION
   Idempotent operation against the Dataverse Web API:
@@ -11,7 +11,7 @@
   WHY the fixed GUID still matters:
     Because the managedidentity row is created with the SAME GUID in dev/test/prod, the
     PATCH body ("/managedidentities(<fixed-guid>)") is byte-for-byte identical everywhere.
-    Set the GUID once, reuse it forever — no per-environment edits.
+    Set the GUID once, reuse it forever - no per-environment edits.
 
   Typical flow (identical in dev/test/prod):
     import solution  ->  run this script
@@ -106,7 +106,7 @@ try {
 
 # --- Create the record (fixed GUID) if missing ---------------------------------------
 if ($exists) {
-    Write-Host "managedidentity $miId already exists — skipping create."
+    Write-Host "managedidentity $miId already exists - skipping create."
 } else {
     Write-Host "Creating managedidentity $miId ..."
     $body = @{
@@ -155,7 +155,7 @@ if ($AssociatePackage) {
         $uri  = "$apiBase/$($set.entity)?`$select=$($set.key)&`$filter=contains(name,'$PluginPackageNameContains')"
         $rows = (Invoke-RestMethod -Method Get -Uri $uri -Headers $headers).value
         if (-not $rows -or $rows.Count -eq 0) {
-            Write-Warning "No $($set.label) found with name containing '$PluginPackageNameContains' — skipping."
+            Write-Warning "No $($set.label) found with name containing '$PluginPackageNameContains' - skipping."
             continue
         }
         foreach ($row in $rows) {

@@ -3,13 +3,13 @@ bin/
 obj/
 packages/
 
-# Per-developer local signing config and certificates — never commit these.
+# Per-developer local signing config and certificates - never commit these.
 signing.local.props
 *.pfx
 *.cer
 codesign.pfx
 
-# Note: SecureOutboundPlugin.snk IS committed on purpose — a strong name is an
+# Note: SecureOutboundPlugin.snk IS committed on purpose - a strong name is an
 # identity, not a secret. The Authenticode .pfx is the real secret and stays out.
 
 # VS / Rider noise

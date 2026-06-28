@@ -8,7 +8,7 @@ namespace Dataverse.SecureOutbound.Services
     /// Resolves Dataverse Environment Variable values. Dataverse stores the definition
     /// (<c>environmentvariabledefinition</c>) separately from any overridden value
     /// (<c>environmentvariablevalue</c>); this service prefers the current value and falls back
-    /// to the definition's default — mirroring how Dataverse itself resolves them.
+    /// to the definition's default - mirroring how Dataverse itself resolves them.
     ///
     /// Reads values directly from Dataverse on each call so changes are effective immediately
     /// without requiring cache invalidation or worker recycle.

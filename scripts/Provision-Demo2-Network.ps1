@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  One-shot provisioning for DEMO 2 — the Network pillar (VNet / subnet injection).
+  One-shot provisioning for DEMO 2 - the Network pillar (VNet / subnet injection).
 
 .DESCRIPTION
   Adds the NETWORK layer on top of the shared base created by Provision-Demo1-Identity.ps1,
@@ -13,7 +13,7 @@
     3. Provision-ManagedIdentityDataverseRecord.ps1 -> managedidentity row in the Demo 2 env
     4. Setup-PowerPlatformEnterprisePolicy.ps1 -> subnet injection enterprise policy linked to Demo 2
     5. NSG on the injected subnet(s): an OUTBOUND DENY rule to the AzureKeyVault service tag. This is
-       what blocks the Key Vault for Demo 2 — NOT the vault firewall (the vault stays public so Demo 1
+       what blocks the Key Vault for Demo 2 - NOT the vault firewall (the vault stays public so Demo 1
        keeps working). A drop/blackhole means the read hangs until the client timeout (~10 s), then
        the plug-in surfaces the "Key Vault is outside the VNet" message.
     6. Print the Function hostname for Test-Connectivity.ps1
@@ -29,12 +29,12 @@
     so the MI token acquisition SUCCEEDS and the Key Vault failure is purely a NETWORK failure
     ("the vault is outside the VNet"), not an "identity not configured" error.
 
-  We deliberately do NOT run Configure-FunctionAuth.ps1 — the boundary demonstrated in Demo 2 is the
+  We deliberately do NOT run Configure-FunctionAuth.ps1 - the boundary demonstrated in Demo 2 is the
   network (private endpoint), so a simple demo bearer token is enough. Enabling Entra platform auth
   would 401 the demo token and turn the success cell into a misleading failure.
 
-  Idempotent — safe to re-run. Run Provision-Demo1-Identity.ps1 first (it creates the shared RG + KV
-  + secret), then this. Pre-provision BEFORE the live demo — subnet injection needs time to
+  Idempotent - safe to re-run. Run Provision-Demo1-Identity.ps1 first (it creates the shared RG + KV
+  + secret), then this. Pre-provision BEFORE the live demo - subnet injection needs time to
   propagate, so validate with Test-Connectivity.ps1 ahead of time, not live.
 
 .PARAMETER TenantId            Entra tenant ID (GUID).
@@ -51,7 +51,7 @@
 .PARAMETER KeyVaultName        Name of the SHARED Key Vault (default: kv-secure-outbound-demo).
 .PARAMETER ManagedIdentityName Name of the Demo 2 User-Assigned MI (default: mi-secure-outbound-demo2).
 .PARAMETER SecretName          Secret name (must match Demo 1; default: AccountSecret).
-.PARAMETER SecretValue         Secret value (must match Demo 1 — same shared vault).
+.PARAMETER SecretValue         Secret value (must match Demo 1 - same shared vault).
 .PARAMETER InjectionVnetPrimary    Primary injection VNet name (matches Setup-PowerPlatformEnterprisePolicy).
 .PARAMETER InjectionVnetSecondary  Secondary injection VNet name (matches Setup-PowerPlatformEnterprisePolicy).
 .PARAMETER InjectionSubnetName      Injected subnet name (matches Setup-PowerPlatformEnterprisePolicy).
@@ -85,7 +85,7 @@ param(
     [string]$SecretName          = "AccountSecret",
     [string]$SecretValue         = "Hello-From-KeyVault-2026",
 
-    # Injection VNet/subnet names — keep in sync with Setup-PowerPlatformEnterprisePolicy.ps1.
+    # Injection VNet/subnet names - keep in sync with Setup-PowerPlatformEnterprisePolicy.ps1.
     [string]$InjectionVnetPrimary   = "vnet-ppinject-we-dev",
     [string]$InjectionVnetSecondary = "vnet-ppinject-ne-dev",
     [string]$InjectionSubnetName    = "snet-ppinject"
@@ -101,7 +101,7 @@ function Write-Banner($text) {
     Write-Host "==================================================================" -ForegroundColor Cyan
 }
 
-Write-Banner "DEMO 2 — NETWORK PILLAR (VNet / subnet injection)"
+Write-Banner "DEMO 2 - NETWORK PILLAR (VNet / subnet injection)"
 Write-Host "Resource group : $ResourceGroupName (shared with Demo 1)"
 Write-Host "Function App   : $FunctionAppName (shared, private, publicNetworkAccess=Disabled)"
 Write-Host "Key Vault      : $KeyVaultName (shared, public; blocked here by an NSG on the injected subnet)"
@@ -215,7 +215,7 @@ Write-Host "  adc_KeyVaultUrl                = https://$KeyVaultName.vault.azure
 Write-Host "  adc_KeyVaultAccountSecretName  = $SecretName"
 Write-Host "  adc_ErpApiUrl                  = https://$funcHost/api/erp/account-sync  (reachable via VNet -> SUCCESS)"
 Write-Host ""
-Write-Host "(Same values as Demo 1 — only the network posture differs.)"
+Write-Host "(Same values as Demo 1 - only the network posture differs.)"
 Write-Host ""
 Write-Host "Validate connectivity AHEAD of the demo (subnet injection takes time to propagate):" -ForegroundColor Yellow
 Write-Host "  ./scripts/vnet/Test-Connectivity.ps1 -EnvironmentId $EnvironmentId -HostName $funcHost -Destination $funcHost -Port 443"

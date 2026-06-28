@@ -11,7 +11,7 @@ namespace Dataverse.SecureOutbound.Services
 {
     /// <summary>
     /// Sends Account data to the ERP / Function App over HTTPS. The bearer token is a simple demo
-    /// token — this path is intentionally decoupled from Key Vault: the boundary being demonstrated
+    /// token - this path is intentionally decoupled from Key Vault: the boundary being demonstrated
     /// here is the network (private endpoint / VNet), not the secret store.
     /// </summary>
     public sealed class ErpService : IErpService

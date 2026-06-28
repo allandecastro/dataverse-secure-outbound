@@ -5,7 +5,7 @@
   Identity Credential (FIC) that lets Dataverse authenticate as that identity.
 
 .DESCRIPTION
-  Run this ONCE per environment (dev/test/prod). It is idempotent — re-running it
+  Run this ONCE per environment (dev/test/prod). It is idempotent - re-running it
   only creates what is missing.
 
   After this script completes, you still need to:
@@ -126,7 +126,7 @@ if ($CertificatePath -match '\.pfx$' -and [string]::IsNullOrWhiteSpace($Certific
 Write-Host "`n=== Checking Azure CLI login ===" -ForegroundColor Cyan
 $account = az account show 2>$null | ConvertFrom-Json
 if (-not $account) {
-    Write-Host "Not logged in — running 'az login'..."
+    Write-Host "Not logged in - running 'az login'..."
     az login --tenant $TenantId | Out-Null
 }
 az account set --subscription $SubscriptionId | Out-Null
@@ -136,7 +136,7 @@ Write-Host "Using subscription: $SubscriptionId"
 Write-Host "`n=== Resource Group ===" -ForegroundColor Cyan
 $rg = az group show --name $ResourceGroupName 2>$null | ConvertFrom-Json
 if ($rg) {
-    Write-Host "Resource group '$ResourceGroupName' already exists — skipping."
+    Write-Host "Resource group '$ResourceGroupName' already exists - skipping."
 } else {
     Write-Host "Creating resource group '$ResourceGroupName' in '$Location'..."
     az group create --name $ResourceGroupName --location $Location | Out-Null
@@ -147,7 +147,7 @@ if ($rg) {
 Write-Host "`n=== Managed Identity ===" -ForegroundColor Cyan
 $mi = az identity show --name $ManagedIdentityName --resource-group $ResourceGroupName 2>$null | ConvertFrom-Json
 if ($mi) {
-    Write-Host "Managed identity '$ManagedIdentityName' already exists — skipping."
+    Write-Host "Managed identity '$ManagedIdentityName' already exists - skipping."
 } else {
     Write-Host "Creating managed identity '$ManagedIdentityName'..."
     $mi = az identity create `
@@ -166,7 +166,7 @@ Write-Host "  Principal ID : $miPrincipalId"
 Write-Host "`n=== Key Vault ===" -ForegroundColor Cyan
 $kv = az keyvault show --name $KeyVaultName --resource-group $ResourceGroupName 2>$null | ConvertFrom-Json
 if ($kv) {
-    Write-Host "Key Vault '$KeyVaultName' already exists — skipping."
+    Write-Host "Key Vault '$KeyVaultName' already exists - skipping."
 } else {
     Write-Host "Creating Key Vault '$KeyVaultName'..."
     az keyvault create `
@@ -194,7 +194,7 @@ if (-not [string]::IsNullOrWhiteSpace($existingCountRaw)) {
 }
 
 if ($existingCount -gt 0) {
-    Write-Host "Role assignment already exists — skipping."
+    Write-Host "Role assignment already exists - skipping."
 } else {
     az role assignment create `
         --assignee-object-id $miPrincipalId `
@@ -283,7 +283,7 @@ $existingFic = az identity federated-credential show `
     --resource-group $ResourceGroupName 2>$null | ConvertFrom-Json
 
 if ($existingFic) {
-    Write-Host "FIC '$ficName' already exists — skipping."
+    Write-Host "FIC '$ficName' already exists - skipping."
     Write-Host "  If you changed the certificate, delete the old FIC and re-run:"
     Write-Host "  az identity federated-credential delete --name $ficName --identity-name $ManagedIdentityName --resource-group $ResourceGroupName"
 } else {

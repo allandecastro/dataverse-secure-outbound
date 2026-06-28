@@ -2,7 +2,7 @@
 <!--
   Classic (non-SDK-style) .NET Framework project, which is what the Dataverse plug-in
   registration tooling expects. Builds a signed assembly targeting net462.
-  Azure dependencies are deployed via a Plug-in Package (.nupkg) — no ILMerge required.
+  Azure dependencies are deployed via a Plug-in Package (.nupkg) - no ILMerge required.
 -->
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -10,7 +10,7 @@
     Optional per-developer signing config (gitignored). When a dev drops a
     "signing.local.props" next to this csproj with a CodeSignThumbprint (or a .pfx
     path), the AuthenticodeSignLocal target below kicks in automatically on Debug/Release
-    builds. Without it, nothing happens — so CI and other devs are never broken.
+    builds. Without it, nothing happens - so CI and other devs are never broken.
     See signing.local.props.example for setup.
   -->
   <Import Project="signing.local.props" Condition="Exists('signing.local.props')" />

@@ -11,7 +11,7 @@ namespace Dataverse.SecureOutbound
     /// both writing their result to a single text field (<c>adc_result</c>):
     /// - <c>adc_usekeyvault</c> = read a secret from Key Vault via Managed Identity (Identity pillar).
     /// - <c>adc_usefunction</c> = call a private Function App (Network pillar).
-    /// The two paths are fully decoupled — the Function call no longer borrows a token from Key Vault.
+    /// The two paths are fully decoupled - the Function call no longer borrows a token from Key Vault.
     /// Each environment makes one path succeed and the other fail (the failure is the demo punchline,
     /// surfaced as a clear message in the Plugin Trace Log).
     /// </summary>
@@ -107,7 +107,7 @@ namespace Dataverse.SecureOutbound
             if (!useKeyVault && !useFunction)
             {
                 localContext.Trace(
-                    "Neither '{0}' nor '{1}' is set to true in the Target — nothing to do. " +
+                    "Neither '{0}' nor '{1}' is set to true in the Target - nothing to do. " +
                     "Tick a box and save to run the demo.",
                     UseKeyVaultField, UseFunctionField);
                 return false;

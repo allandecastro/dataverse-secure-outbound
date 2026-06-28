@@ -49,7 +49,7 @@ namespace Dataverse.SecureOutbound.Services
                 // Short network timeout + no retries: a healthy vault answers in well under a second,
                 // but when the network path is blocked (e.g. the vault is 'outside' the injected VNet)
                 // we want to fail FAST with a clear message instead of hanging until the 2-minute
-                // Dataverse plugin timeout — the failure is the demo punchline and must be snappy.
+                // Dataverse plugin timeout - the failure is the demo punchline and must be snappy.
                 SecretClientOptions options = new SecretClientOptions();
                 options.Retry.MaxRetries = 0;
                 options.Retry.NetworkTimeout = TimeSpan.FromSeconds(10);
@@ -73,17 +73,17 @@ namespace Dataverse.SecureOutbound.Services
                 throw new InvalidPluginExecutionException(
                     $"Key Vault call FAILED (HTTP {requestEx.Status}). " +
                     "403 = the vault firewall does not allow this environment's network (the vault is " +
-                    "'outside' the VNet — expected in the Network/Demo 2 environment), or the Managed " +
+                    "'outside' the VNet - expected in the Network/Demo 2 environment), or the Managed " +
                     "Identity is missing the 'Key Vault Secrets User' role; 404 = wrong secret name. " +
                     $"Details: {requestEx.Message}", requestEx);
             }
             catch (Exception ex)
             {
-                // Transport-level failure (no route / timeout / socket) — e.g. the vault is firewalled
+                // Transport-level failure (no route / timeout / socket) - e.g. the vault is firewalled
                 // off from this environment's egress and never completes the TLS handshake.
                 throw new InvalidPluginExecutionException(
                     "Key Vault call FAILED at the network layer: the vault could not be reached from " +
-                    "this environment (firewall / no network path — the vault is 'outside'). This is the " +
+                    "this environment (firewall / no network path - the vault is 'outside'). This is the " +
                     $"expected result in the Network (Demo 2) environment. Inner: {ex.Message}", ex);
             }
         }

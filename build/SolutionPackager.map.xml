@@ -12,7 +12,7 @@
 
   IMPORTANT: the exact 'map' path depends on how YOUR unpacked solution lays out the package.
   After the first export+unpack, open solutions/SecureOutboundIntegration/PluginPackages and adjust the
-  wildcard to match. Confirm against your pac CLI version — package mapping is newer than
+  wildcard to match. Confirm against your pac CLI version - package mapping is newer than
   assembly mapping; cd.yml uses a plain file copy instead, which doesn't rely on map support.
 
   Reference: SolutionPackager /map argument.

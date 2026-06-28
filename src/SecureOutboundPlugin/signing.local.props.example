@@ -4,7 +4,7 @@
 
   WHY: the plug-in assembly must be Authenticode-signed, and the SAME certificate's SHA-256 is
   embedded in the Dataverse Federated Identity Credential (FIC). Signing locally lets you build on
-  your laptop and produce the exact signed DLL + .nupkg that CI produces — without committing any
+  your laptop and produce the exact signed DLL + .nupkg that CI produces - without committing any
   secret.
 
   HOW: copy this file to "signing.local.props" (gitignored) next to the .csproj and fill ONE option
@@ -15,16 +15,16 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
 
-    <!-- ── Option A — PFX file + password (simplest) ───────────────────────────────────── -->
+    <!-- ── Option A - PFX file + password (simplest) ───────────────────────────────────── -->
     <CodeSignPfxPath>$(MSBuildProjectDirectory)\certs\SecureOutboundPluginSigning.pfx</CodeSignPfxPath>
     <CodeSignPfxPassword>change-me</CodeSignPfxPassword>
 
-    <!-- ── Option B — PFX file, password from Windows Credential Manager (no plaintext) ──
+    <!-- ── Option B - PFX file, password from Windows Credential Manager (no plaintext) ──
          Store the password once (Generic Credential, target name below), then comment out
          CodeSignPfxPassword above and uncomment this line. -->
     <!-- <CodeSignPfxCredentialTarget>SecureOutboundPlugin.CodeSign</CodeSignPfxCredentialTarget> -->
 
-    <!-- ── Option C — a cert already installed in your Windows certificate store ─────────
+    <!-- ── Option C - a cert already installed in your Windows certificate store ─────────
          Use its thumbprint; no PFX/password needed. -->
     <!-- <CodeSignThumbprint>ABCDEF0123456789ABCDEF0123456789ABCDEF01</CodeSignThumbprint> -->
 
