@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.26054.147" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26054.147" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26054.00147">
+<ImportExportXml version="9.2.26061.150" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26061.150" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26061.00150">
   <SolutionManifest>
     <UniqueName>SecureOutboundIntegration</UniqueName>
     <LocalizedNames>
       <LocalizedName description="SecureOutboundIntegration" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.10577.51</Version>
+    <Version>1.0.10579.61</Version>
     <Managed>1</Managed>
     <Publisher>
       <UniqueName>allandecastro</UniqueName>
@@ -202,8 +202,8 @@
         <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=m365copilotmodelappenabled" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="m365copilotmodelappenabled" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="SettingDefinition" displayName="msdyn_TimelineModernization" solution="msdyn_TimelineExtended (9.0.26054.1019)" id.uniquename="msdyn_TimelineModernization">
-          <package appName="msdyn_CustomControlsExtended" version="9.0.26054.1019">msdyn_TimelineExtended (9.0.26054.1019)</package>
+        <Required type="SettingDefinition" displayName="msdyn_TimelineModernization" solution="msdyn_TimelineExtended (9.0.26061.1001)" id.uniquename="msdyn_TimelineModernization">
+          <package appName="msdyn_CustomControlsExtended" version="9.0.26061.1001">msdyn_TimelineExtended (9.0.26061.1001)</package>
         </Required>
         <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=adc_SecureOutboundIntegration,settingdefinitionid.uniquename=msdyn_TimelineModernization" id.parentappmoduleid.uniquename="adc_SecureOutboundIntegration" id.settingdefinitionid.uniquename="msdyn_TimelineModernization" />
       </MissingDependency>
