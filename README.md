@@ -328,7 +328,7 @@ must be associated** to it.
 
 - **Record** - created at a **fixed GUID** (reused across environments so the operation is identical
   everywhere) carrying the MI's `applicationid` (client ID), `tenantid`, `credentialsource=2`,
-  `subjectscope=1`, `version=1`:
+  `subjectscope=1`, `version=2` (the recommended, SHA-256-hashed FIC format):
   ```powershell
   ./scripts/managed-identity/Provision-ManagedIdentityDataverseRecord.ps1 `
     -DataverseUrl "https://<org>.crm4.dynamics.com" `
@@ -485,7 +485,7 @@ The CD wires the Managed Identity in two `Provision-ManagedIdentityDataverseReco
 
 1. **Before import** - upsert the **`managedidentity` record** at the **fixed GUID**
    (`DATAVERSE_MANAGED_IDENTITY_GUID`) with the per-environment **`applicationid`**
-   (`MANAGED_IDENTITY_APPLICATION_ID`), `credentialsource=2`, `subjectscope=1`, `version=1`.
+   (`MANAGED_IDENTITY_APPLICATION_ID`), `credentialsource=2`, `subjectscope=1`, `version=2` (the recommended, SHA-256-hashed FIC format).
 2. **After import** - the same script with **`-AssociatePackage`** binds the imported
    `pluginpackage` (+ `pluginassembly`) to that record. A fresh install does **not** reliably carry
    the package→identity link, so it is set explicitly here - otherwise the plug-in fails with

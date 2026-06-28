@@ -115,7 +115,7 @@ if ($exists) {
         tenantid          = $tenantId
         credentialsource  = $credSource
         subjectscope      = 1
-        version           = 1
+        version           = 2
     } | ConvertTo-Json
     Invoke-RestMethod -Method Post -Uri "$apiBase/managedidentities" -Headers $headers -Body $body | Out-Null
     Write-Host "Created managedidentity $miId."
@@ -128,7 +128,7 @@ $patchBody = @{
     tenantid         = $tenantId
     credentialsource = $credSource
     subjectscope     = 1
-    version          = 1
+    version          = 2
 } | ConvertTo-Json
 
 $patchHeaders = $headers.Clone()
