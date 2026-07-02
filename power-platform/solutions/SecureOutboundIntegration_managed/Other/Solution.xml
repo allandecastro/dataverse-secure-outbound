@@ -6,7 +6,7 @@
       <LocalizedName description="SecureOutboundIntegration" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.10579.61</Version>
+    <Version>1.0.10583.71</Version>
     <Managed>1</Managed>
     <Publisher>
       <UniqueName>allandecastro</UniqueName>
@@ -118,7 +118,7 @@
         <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="60" displayName="Cases For Customer" parentDisplayName="Account" solution="OmnichannelPrime (1.10.0.245)" id="{48028ae0-bf87-48c9-adf6-3dc9f29d7661}">
+        <Required type="60" displayName="Cases For Customer" parentDisplayName="Account" solution="OmnichannelPrime (1.10.0.248)" id="{48028ae0-bf87-48c9-adf6-3dc9f29d7661}">
           <package appName="OmnichannelPrime" version="1.10.0.113">msdyn_ContactCenterAdminCopilot (1.10.0.113)</package>
           <package appName="OmnichannelPrime" version="1.10.0.10">msdyn_ContactCenterAgentManagement (1.10.0.10)</package>
           <package appName="OmnichannelPrime" version="1.10.0.1">msdyn_ContactCenterAgentManagementData (1.10.0.1)</package>
@@ -151,7 +151,7 @@
       </MissingDependency>
       <MissingDependency>
         <Required type="60" displayName="Customer profile" parentDisplayName="Account" solution="OmnichannelBase (1.10.0.146)" id="{e9a9c8a9-e94d-47a9-a6c3-ec37ddb83b99}">
-          <package appName="UnifiedRoutingPrime" version="1.5.27.232">UnifiedRoutingPrimeAnchor (1.5.27.232)</package>
+          <package appName="UnifiedRoutingPrime" version="1.5.27.237">UnifiedRoutingPrimeAnchor (1.5.27.237)</package>
         </Required>
         <Dependent type="80" schemaName="adc_SecureOutboundIntegration" displayName="Secure Outbound Integration" />
       </MissingDependency>
@@ -166,10 +166,6 @@
           <package appName="msdyn_AcceleratedSales" version="9.1.26054.10002">msdyn_AcceleratedSalesAnchor (9.1.26054.10002)</package>
         </Required>
         <Dependent type="60" displayName="SecureOutboundMainForm" parentDisplayName="Account" id="{3f027a28-8a61-f111-a826-70a8a57e51c1}" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="ManagedIdentity" solution="Active" id="{6d53c6c1-26e5-47b9-9f98-252fc54d08cb}" />
-        <Dependent type="PluginPackage" displayName="adc_SecureOutboundPlugin" id.uniquename="adc_SecureOutboundPlugin" />
       </MissingDependency>
       <MissingDependency>
         <Required type="SettingDefinition" displayName="AppChannel" solution="msdyn_AppFrameworkInfraExtensions (1.0.0.17)" id.uniquename="AppChannel">
