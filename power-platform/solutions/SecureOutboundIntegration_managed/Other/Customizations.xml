@@ -15,6 +15,19 @@
   <AppModuleSiteMaps />
   <AppModules />
   <EntityDataProviders />
+  <managedidentities>
+    <managedidentity managedidentityid="6d53c6c1-26e5-47b9-9f98-252fc54d08cb">
+      <applicationid>{becd781b-eff7-4da4-8be8-70a5d1f419d4}</applicationid>
+      <credentialsource>2</credentialsource>
+      <identitytype>0</identitytype>
+      <iscustomizable>1</iscustomizable>
+      <statecode>0</statecode>
+      <statuscode>1</statuscode>
+      <subjectscope>1</subjectscope>
+      <tenantid>{889dce7c-7548-438a-ae0c-b2bfd7a96a2e}</tenantid>
+      <version>2</version>
+    </managedidentity>
+  </managedidentities>
   <Languages>
     <Language>1033</Language>
   </Languages>
