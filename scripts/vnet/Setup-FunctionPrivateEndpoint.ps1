@@ -246,6 +246,20 @@ if ($null -eq $appi) {
 }
 
 # 5) App Service plan (dedicated, Linux)
+# An existing Function on another plan (e.g. the former EP1) is NOT moved: Azure does not support
+# in-place Linux migrations from Elastic Premium to a dedicated plan, and creating the new plan
+# anyway would bill both. Stop and let the operator recreate the app explicitly.
+$existingPlanId = az functionapp show --resource-group $ResourceGroupName --name $FunctionAppName --query serverFarmId -o tsv 2>$null
+if (-not [string]::IsNullOrWhiteSpace($existingPlanId)) {
+    $existingPlanName = ($existingPlanId -split '/')[-1]
+    if ($existingPlanName -ne $FunctionPlanName) {
+        throw ("Function App '$FunctionAppName' runs on plan '$existingPlanName', not '$FunctionPlanName'. " +
+               "Linux apps cannot be moved in place: delete the private endpoint '$PrivateEndpointName' and the " +
+               "Function App, re-run this script to recreate them on '$FunctionPlanName', then delete the unused " +
+               "plan '$existingPlanName'. Or pass -FunctionPlanName '$existingPlanName' to keep the current plan.")
+    }
+}
+
 Write-Host "`n=== App Service Plan ($FunctionPlanSku) ===" -ForegroundColor Cyan
 $plan = Get-AzJson -Command "az appservice plan show --resource-group $ResourceGroupName --name $FunctionPlanName -o json"
 if ($null -eq $plan) {
@@ -290,21 +304,45 @@ az functionapp config set `
     --always-on true | Out-Null
 Write-Host "Runtime pinned to DOTNET-ISOLATED|8.0, Always On enabled."
 
-# 6b) Deploy the code while the site is still publicly reachable
+# 6b) Deploy the code while the site is temporarily publicly reachable. Public access is closed
+#     again in 'finally', so a failed or timed-out deployment never leaves the Function exposed
+#     (the demo handler only checks for a non-empty bearer token).
 if (-not [string]::IsNullOrWhiteSpace($PackagePath)) {
     Write-Host "`n=== Deploy Function package ===" -ForegroundColor Cyan
     if (-not (Test-Path $PackagePath)) { throw "Function package not found: $PackagePath" }
+    try {
+        az functionapp update `
+            --resource-group $ResourceGroupName `
+            --name $FunctionAppName `
+            --set publicNetworkAccess=Enabled | Out-Null
+        az functionapp deployment source config-zip `
+            --resource-group $ResourceGroupName `
+            --name $FunctionAppName `
+            --src (Resolve-Path $PackagePath).Path `
+            --timeout 600 | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Zip deployment of '$PackagePath' failed." }
+        Write-Host "Deployed '$PackagePath'."
+    }
+    finally {
+        if ($DisablePublicNetworkAccess) {
+            az functionapp update `
+                --resource-group $ResourceGroupName `
+                --name $FunctionAppName `
+                --set publicNetworkAccess=Disabled | Out-Null
+            Write-Host "Public network access disabled again."
+        }
+    }
+}
+
+# 6c) Public network access - closed before the private endpoint/DNS steps, so a later failure
+#     there cannot leave the Function exposed (the private endpoint does not need it).
+if ($DisablePublicNetworkAccess) {
+    Write-Host "`n=== Function public access ===" -ForegroundColor Cyan
     az functionapp update `
         --resource-group $ResourceGroupName `
         --name $FunctionAppName `
-        --set publicNetworkAccess=Enabled | Out-Null
-    az functionapp deployment source config-zip `
-        --resource-group $ResourceGroupName `
-        --name $FunctionAppName `
-        --src (Resolve-Path $PackagePath).Path `
-        --timeout 600 | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Zip deployment of '$PackagePath' failed." }
-    Write-Host "Deployed '$PackagePath'."
+        --set publicNetworkAccess=Disabled | Out-Null
+    Write-Host "Set Function App publicNetworkAccess=Disabled."
 }
 
 # 7) Private endpoint
@@ -366,16 +404,6 @@ if ($null -eq $zoneGroup) {
     Write-Host "Created private endpoint DNS zone group."
 } else {
     Write-Host "Private endpoint DNS zone group already exists."
-}
-
-# 9) Public network access
-if ($DisablePublicNetworkAccess) {
-    Write-Host "`n=== Function public access ===" -ForegroundColor Cyan
-    az functionapp update `
-        --resource-group $ResourceGroupName `
-        --name $FunctionAppName `
-        --set publicNetworkAccess=Disabled | Out-Null
-    Write-Host "Set Function App publicNetworkAccess=Disabled."
 }
 
 # Summary
