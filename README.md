@@ -514,6 +514,63 @@ The SPN must be a Dataverse **application user with System Administrator**. Per-
 
 ---
 
+## Rebuilding the demo from scratch
+
+The whole demo (3 Dataverse environments + Azure) can be torn down between sessions and rebuilt
+in about two hours. Order matters:
+
+1. **Dataverse environments** - `secure-outbound-demo1` (DEV), `secure-outbound-demo1-sit` (SIT),
+   `secure-outbound-demo2` (DEMO2): Sandbox, region `europe`, template **`D365_Sales`** (the
+   solution's model-driven app references Dynamics 365 forms; Sales is enough).
+   ```powershell
+   pac admin create --name secure-outbound-demo1 --domain secure-outbound-demo1 --type Sandbox `
+     --region europe --currency EUR --language English --templates D365_Sales
+   ```
+   Then, in each environment, add the CI/CD SPN as an application user and make DEMO2 a
+   **Managed Environment** (required for subnet injection):
+   ```powershell
+   pac admin assign-user --environment <env-id> --user <spn-app-id> --role "System Administrator" --application-user
+   pac admin set-governance-config --environment <demo2-env-id> --protection-level Standard --solution-checker-mode none
+   ```
+2. **Azure identity** - `Provision-Demo1-Identity.ps1` for DEV, then `Setup-AzureResources.ps1` for
+   SIT (`rg-secure-outbound-sit` / `kv-secure-outbound-sit` / `mi-secure-outbound-sit`). Only the
+   certificate's **public** part is needed for the FIC (a `.cer` works).
+3. **Azure network** - `Provision-Demo2-Network.ps1` (Function B1 + code, private endpoint, DNS,
+   enterprise policy, NSGs, peering).
+4. **GitHub** - set `MANAGED_IDENTITY_APPLICATION_ID` on DEV / SIT / DEMO2 (the env URLs stay the
+   same when the same domain names are reused).
+5. **DEV solution** - DEV is the maker environment and is not a CD target: ensure the
+   `managedidentity` record exists **first** (the plug-in package references it), then import the
+   unmanaged solution with plug-ins activated, then re-run the record script with `-AssociatePackage`
+   (the import overwrites the record with the application ID stored in the solution):
+   ```powershell
+   pac solution pack --zipfile out/unmanaged.zip --folder power-platform/solutions/SecureOutboundIntegration --packagetype Unmanaged
+   pac solution import --environment <dev-env-id> --path out/unmanaged.zip `
+     --settings-file power-platform/settings/deployment-settings-DEV.json --activate-plugins --publish-changes --async
+   ```
+6. **CD** - run `cd.yml` for SIT, then DEMO2 (once the subnet injection link has finished).
+7. **Tracing** - set *Plug-in and custom workflow activity tracing* to **All** in each environment.
+8. **Validate** - `Test-Connectivity.ps1` from DEMO2, then the 2×2 matrix.
+
+**Gotchas met during a rebuild**
+
+| Symptom | Cause / fix |
+|---|---|
+| `az keyvault create` fails, name already in use | The vault is soft-deleted (90 days). Recreate its resource group, then `az keyvault recover --name <kv>`. |
+| `Forbidden` reading secrets from the recovered vault | Your data-plane role went away with the old RG: grant yourself `Key Vault Secrets Officer` again. |
+| `nodename nor servname provided` / `Hôte inconnu` right after creating an env | A resolver cached NXDOMAIN from a lookup made before the env existed. Wait ~5 min, or flush (`ipconfig /flushdns` on the runner VM). |
+| Function returns **503** after deployment | Runtime defaulted to a newer .NET than the code targets. The script pins `DOTNET-ISOLATED|8.0`. |
+| Plug-in does nothing in DEV after import | `pac solution import` leaves steps **disabled** without `--activate-plugins`. |
+| DEMO2: *"no Sandbox Hosts are currently available"* | Normal for a few minutes right after subnet injection is enabled - retry. |
+| DEMO2: Function hostname does not resolve | Private DNS zone has no A record (zone group missing) or is not linked to the injection VNets. |
+| `EnterprisePolicies` module asks to install Az modules | It requires exact versions (`Az.Resources 8.1.1`, `Az.KeyVault 6.4.0`, `Az.Network 7.22.0`). |
+
+**Running cost** (idle, West Europe): ~20 EUR/month - App Service plan B1 (~12) + private endpoint
+(~7) + DNS zone; everything else is pay-per-use or free. Delete the plan and the private endpoint
+between sessions to go to ~0.
+
+---
+
 ## Repository layout
 
 ```
