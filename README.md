@@ -534,7 +534,12 @@ in about two hours. Order matters:
    ```
 2. **Azure identity** - `Provision-Demo1-Identity.ps1` for DEV, then `Setup-AzureResources.ps1` for
    SIT (`rg-secure-outbound-sit` / `kv-secure-outbound-sit` / `mi-secure-outbound-sit`). Only the
-   certificate's **public** part is needed for the FIC (a `.cer` works).
+   certificate's **public** part is needed for the FIC (a `.cer` works). `Setup-AzureResources.ps1`
+   does not create a secret, so seed SIT's vault yourself (DEV/DEMO2 share the vault seeded by
+   `Provision-Demo1-Identity.ps1`):
+   ```powershell
+   az keyvault secret set --vault-name kv-secure-outbound-sit --name AccountSecret --value "Hello-From-KeyVault-SIT-2026"
+   ```
 3. **Azure network** - `Provision-Demo2-Network.ps1` (Function B1 + code, private endpoint, DNS,
    enterprise policy, NSGs, peering).
 4. **GitHub** - set `MANAGED_IDENTITY_APPLICATION_ID` on DEV / SIT / DEMO2 (the env URLs stay the
