@@ -38,12 +38,14 @@
 .PARAMETER SubscriptionId      Azure subscription ID.
 .PARAMETER EnvironmentId       Dataverse environment ID of the Demo 1 environment (GUID).
 .PARAMETER DataverseUrl        Demo 1 Dataverse org URL, e.g. https://demo1.crm.dynamics.com
-.PARAMETER ManagedIdentityApplicationId   App/client ID of the MI for the Demo 1 environment.
+.PARAMETER ManagedIdentityApplicationId   Optional. App/client ID of the Demo 1 MI. Resolved from the MI
+                                          created in step 1 when omitted (the MI does not exist yet on a
+                                          first run, so you usually leave this out).
 .PARAMETER DataverseRecordManagedIdentityId  Fixed managedidentity GUID (same value across envs).
 .PARAMETER CertificatePath     Path to the code-signing .pfx/.cer (used for the FIC subject).
 .PARAMETER CertificatePassword Password for the .pfx (omit for .cer).
 .PARAMETER ResourceGroupName   Shared RG for both demos (default: rg-secure-outbound-demo).
-.PARAMETER Location            Azure region (default: northeurope).
+.PARAMETER Location            Azure region (default: westeurope).
 .PARAMETER KeyVaultName        Name of the SHARED Key Vault (default: kv-secure-outbound-demo).
 .PARAMETER ManagedIdentityName Name of the Demo 1 User-Assigned MI (default: mi-secure-outbound-demo1).
 .PARAMETER SecretName          Secret name to seed (default: AccountSecret).
@@ -55,7 +57,6 @@
     -SubscriptionId "<sub-guid>" `
     -EnvironmentId  "<demo1-env-guid>" `
     -DataverseUrl   "https://secure-outbound-demo1.crm4.dynamics.com" `
-    -ManagedIdentityApplicationId "<mi-app-id-demo1>" `
     -DataverseRecordManagedIdentityId "<fixed-mi-guid>" `
     -CertificatePath "codesign.pfx" -CertificatePassword "P@ss"
 #>
@@ -65,13 +66,13 @@ param(
     [Parameter(Mandatory = $true)][string]$SubscriptionId,
     [Parameter(Mandatory = $true)][string]$EnvironmentId,
     [Parameter(Mandatory = $true)][string]$DataverseUrl,
-    [Parameter(Mandatory = $true)][string]$ManagedIdentityApplicationId,
+    [string]$ManagedIdentityApplicationId,
     [Parameter(Mandatory = $true)][string]$DataverseRecordManagedIdentityId,
     [Parameter(Mandatory = $true)][string]$CertificatePath,
     [string]$CertificatePassword,
 
     [string]$ResourceGroupName   = "rg-secure-outbound-demo",
-    [string]$Location            = "northeurope",
+    [string]$Location            = "westeurope",
     [string]$KeyVaultName        = "kv-secure-outbound-demo",
     [string]$ManagedIdentityName = "mi-secure-outbound-demo1",
     [string]$SecretName          = "AccountSecret",
@@ -106,6 +107,13 @@ Write-Banner "1/4  Azure resources (MI + shared Key Vault + FIC)"
     -Location            $Location `
     -KeyVaultName        $KeyVaultName `
     -ManagedIdentityName $ManagedIdentityName
+
+# The MI is created by step 1, so its client ID is only known now.
+if ([string]::IsNullOrWhiteSpace($ManagedIdentityApplicationId)) {
+    $ManagedIdentityApplicationId = az identity show --name $ManagedIdentityName --resource-group $ResourceGroupName --query clientId -o tsv
+    if ([string]::IsNullOrWhiteSpace($ManagedIdentityApplicationId)) { throw "Could not resolve the client ID of '$ManagedIdentityName'." }
+}
+Write-Host "MI client ID   : $ManagedIdentityApplicationId (set it as MANAGED_IDENTITY_APPLICATION_ID on the GitHub Environment)"
 
 # 2. Seed the demo secret (shared vault) ----------------------------------------------
 Write-Banner "2/4  Seed secret '$SecretName' in $KeyVaultName"

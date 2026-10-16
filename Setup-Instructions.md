@@ -118,17 +118,19 @@ az login
 ./scripts/Provision-Demo1-Identity.ps1 `
   -TenantId "<tenant>" -SubscriptionId "<sub>" `
   -EnvironmentId "<demo1-env-guid>" -DataverseUrl "https://secure-outbound-demo1.crm4.dynamics.com" `
-  -ManagedIdentityApplicationId "<mi-app-id-demo1>" -DataverseRecordManagedIdentityId "<fixed-mi-guid>" `
+  -DataverseRecordManagedIdentityId "<fixed-mi-guid>" `
   -CertificatePath "codesign.pfx" -CertificatePassword "<pwd>"
 
 # Demo 2 - Network pillar. Reuses the SHARED rg/Key Vault, adds the private Function App
-# func-secure-outbound-demo, the Demo 2 Managed Identity, the subnet-injection enterprise policy,
-# and an NSG drop rule to AzureKeyVault on the injected subnet (that NSG - not the vault firewall -
-# is what blocks the Key Vault for this environment).
+# func-secure-outbound-demo (B1, .NET 8, code deployed), the Demo 2 Managed Identity, the
+# subnet-injection enterprise policy, one "allow VNet / deny Internet" NSG per injected subnet
+# (that NSG - not the vault firewall - is what blocks the Key Vault for this environment), and the
+# VNet peering + private DNS links that let the injected subnets reach the private endpoint.
+# Prerequisite: the Demo 2 environment must be a Managed Environment.
 ./scripts/Provision-Demo2-Network.ps1 `
   -TenantId "<tenant>" -SubscriptionId "<sub>" `
   -EnvironmentId "<demo2-env-guid>" -DataverseUrl "https://secure-outbound-demo2.crm4.dynamics.com" `
-  -ManagedIdentityApplicationId "<mi-app-id-demo2>" -DataverseRecordManagedIdentityId "<fixed-mi-guid>" `
+  -DataverseRecordManagedIdentityId "<fixed-mi-guid>" `
   -CertificatePath "codesign.pfx" -CertificatePassword "<pwd>"
 ```
 
@@ -139,6 +141,9 @@ az login
 > read hangs until the SDK timeout (~10 s) and the plug-in surfaces the "Key Vault is outside the
 > VNet" message. No vault firewall change (which would also break Demo 1). The Managed Identity still
 > resolves a token, so the failure is purely *network*, not *identity*.
+
+The Managed Identity client ID is resolved from the MI the script creates and printed at the end:
+set it as `MANAGED_IDENTITY_APPLICATION_ID` on the matching GitHub Environment.
 
 Each script prints the exact Environment Variable values to set (Step 3) and, for Demo 2, the
 Function hostname to validate with `scripts/vnet/Test-Connectivity.ps1` **ahead of time** (subnet

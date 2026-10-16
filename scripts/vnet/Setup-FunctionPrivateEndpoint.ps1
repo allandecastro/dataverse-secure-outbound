@@ -4,8 +4,15 @@
 
 .DESCRIPTION
   Creates (or reuses) a dedicated resource group, VNet/subnet, storage account,
-  App Service plan (Elastic Premium), Function App, Private Endpoint, and Private DNS
-  plumbing for `privatelink.azurewebsites.net`.
+  App Service plan (Basic B1, Linux), Function App (.NET 8 isolated, Always On), deploys the
+  ErpMockFunction package, then adds the Private Endpoint and Private DNS plumbing for
+  `privatelink.azurewebsites.net` and finally disables public access.
+
+  Why B1 and not Elastic Premium: a private endpoint only needs a dedicated (Basic+) or Premium
+  plan. B1 is ~12 EUR/month vs ~150 EUR/month for EP1 and stays warm with Always On.
+
+  The code is deployed BEFORE public access is disabled: once the site is private, a zip deploy
+  from outside the VNet is rejected.
 
   This script is idempotent and supports:
   - auto-detect tenant/subscription from `az account show`
@@ -26,6 +33,13 @@
 
 .PARAMETER Location
   Azure region.
+
+.PARAMETER FunctionPlanSku
+  App Service plan SKU (default: B1).
+
+.PARAMETER PackagePath
+  Zip package of the Function to deploy (default: src/ErpMockFunction/publish.zip).
+  Pass an empty string to skip the deployment.
 
 .PARAMETER DisablePublicNetworkAccess
   When true (default), sets Function App public network access to Disabled.
@@ -48,12 +62,14 @@ param(
     [string]$VirtualNetworkName = "vnet-secureoutbound-vnet-dev",
     [string]$PrivateEndpointSubnetName = "snet-private-endpoints",
     [string]$PrivateEndpointSubnetPrefix = "10.81.1.0/24",
-    [string]$FunctionPlanName = "asp-secureoutbound-vnet-dev",
+    [string]$FunctionPlanName = "asp-secure-outbound-demo-b1",
+    [string]$FunctionPlanSku = "B1",
     [string]$FunctionAppName = "func-secureoutbound-vnet-dev",
     [string]$StorageAccountName,
     [string]$ApplicationInsightsName = "appi-secureoutbound-vnet-dev",
     [string]$PrivateEndpointName = "pep-secureoutbound-func-dev",
     [string]$PrivateDnsZoneName = "privatelink.azurewebsites.net",
+    [string]$PackagePath = (Join-Path $PSScriptRoot "../../src/ErpMockFunction/publish.zip"),
     [bool]$DisablePublicNetworkAccess = $true
 )
 
@@ -144,6 +160,11 @@ az account set --subscription $SubscriptionId | Out-Null
 az config set extension.use_dynamic_install=yes_without_prompt | Out-Null
 
 if ([string]::IsNullOrWhiteSpace($StorageAccountName)) {
+    # Reuse the storage account of an existing Function App so re-runs stay idempotent.
+    $existingStorage = az functionapp config appsettings list --resource-group $ResourceGroupName --name $FunctionAppName --query "[?name=='AzureWebJobsStorage'].value | [0]" -o tsv 2>$null
+    if ($existingStorage -match 'AccountName=([^;]+)') { $StorageAccountName = $Matches[1] }
+}
+if ([string]::IsNullOrWhiteSpace($StorageAccountName)) {
     $StorageAccountName = Get-AvailableStorageAccountName -BaseName "st$FunctionAppName"
 }
 
@@ -224,19 +245,19 @@ if ($null -eq $appi) {
     Write-Host "Application Insights '$ApplicationInsightsName' already exists."
 }
 
-# 5) Function plan (Elastic Premium)
-Write-Host "`n=== Function Plan (EP1) ===" -ForegroundColor Cyan
-$plan = Get-AzJson -Command "az functionapp plan show --resource-group $ResourceGroupName --name $FunctionPlanName -o json"
+# 5) App Service plan (dedicated, Linux)
+Write-Host "`n=== App Service Plan ($FunctionPlanSku) ===" -ForegroundColor Cyan
+$plan = Get-AzJson -Command "az appservice plan show --resource-group $ResourceGroupName --name $FunctionPlanName -o json"
 if ($null -eq $plan) {
-    az functionapp plan create `
+    az appservice plan create `
         --resource-group $ResourceGroupName `
         --name $FunctionPlanName `
         --location $Location `
-        --sku EP1 `
+        --sku $FunctionPlanSku `
         --is-linux | Out-Null
-    Write-Host "Created Function plan '$FunctionPlanName' (EP1)."
+    Write-Host "Created App Service plan '$FunctionPlanName' ($FunctionPlanSku)."
 } else {
-    Write-Host "Function plan '$FunctionPlanName' already exists."
+    Write-Host "App Service plan '$FunctionPlanName' already exists."
 }
 
 # 6) Function app
@@ -251,12 +272,39 @@ if ($null -eq $func) {
         --os-type Linux `
         --functions-version 4 `
         --runtime dotnet-isolated `
+        --runtime-version 8 `
         --app-insights $ApplicationInsightsName `
         --https-only true | Out-Null
     Write-Host "Created Function App '$FunctionAppName'."
     $func = Get-AzJson -Command "az functionapp show --resource-group $ResourceGroupName --name $FunctionAppName -o json"
 } else {
     Write-Host "Function App '$FunctionAppName' already exists."
+}
+
+# Pin the runtime to the version the code targets (net8.0). Without it Azure picks its current
+# default (DOTNET-ISOLATED|10.0 at the time of writing) and the worker fails to start (HTTP 503).
+az functionapp config set `
+    --resource-group $ResourceGroupName `
+    --name $FunctionAppName `
+    --linux-fx-version "DOTNET-ISOLATED|8.0" `
+    --always-on true | Out-Null
+Write-Host "Runtime pinned to DOTNET-ISOLATED|8.0, Always On enabled."
+
+# 6b) Deploy the code while the site is still publicly reachable
+if (-not [string]::IsNullOrWhiteSpace($PackagePath)) {
+    Write-Host "`n=== Deploy Function package ===" -ForegroundColor Cyan
+    if (-not (Test-Path $PackagePath)) { throw "Function package not found: $PackagePath" }
+    az functionapp update `
+        --resource-group $ResourceGroupName `
+        --name $FunctionAppName `
+        --set publicNetworkAccess=Enabled | Out-Null
+    az functionapp deployment source config-zip `
+        --resource-group $ResourceGroupName `
+        --name $FunctionAppName `
+        --src (Resolve-Path $PackagePath).Path `
+        --timeout 600 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "Zip deployment of '$PackagePath' failed." }
+    Write-Host "Deployed '$PackagePath'."
 }
 
 # 7) Private endpoint
@@ -303,14 +351,18 @@ if ($null -eq $dnsLink) {
     Write-Host "DNS link '$dnsLinkName' already exists."
 }
 
+# The zone group is what writes the A records (<func> -> private IP) into the zone. It must be
+# given the zone's resource ID: with a bare zone name the call fails and the zone stays empty.
 $zoneGroup = Get-AzJson -Command "az network private-endpoint dns-zone-group show --resource-group $ResourceGroupName --endpoint-name $PrivateEndpointName --name default -o json"
 if ($null -eq $zoneGroup) {
+    $zoneId = (az network private-dns zone show --resource-group $ResourceGroupName --name $PrivateDnsZoneName --query id -o tsv)
     az network private-endpoint dns-zone-group create `
         --resource-group $ResourceGroupName `
         --endpoint-name $PrivateEndpointName `
         --name default `
-        --private-dns-zone $PrivateDnsZoneName `
-        --zone-name $PrivateDnsZoneName | Out-Null
+        --private-dns-zone $zoneId `
+        --zone-name ($PrivateDnsZoneName -replace '\.', '-') | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "Failed to create the private endpoint DNS zone group." }
     Write-Host "Created private endpoint DNS zone group."
 } else {
     Write-Host "Private endpoint DNS zone group already exists."
@@ -339,5 +391,4 @@ Write-Host "VNet/Subnet         : $VirtualNetworkName / $PrivateEndpointSubnetNa
 Write-Host "Private Endpoint    : $PrivateEndpointName"
 Write-Host "Private DNS Zone    : $PrivateDnsZoneName"
 Write-Host ""
-Write-Host "Next step:"
-Write-Host "  Run scripts/vnet/Configure-FunctionAuth.ps1 to enforce OAuth2 on the Function App."
+Write-Host "Note: the demo deliberately does NOT run Configure-FunctionAuth.ps1 (the boundary shown is the network)."
