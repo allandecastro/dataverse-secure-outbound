@@ -6,7 +6,7 @@
   Adds the NETWORK layer on top of the shared base created by Provision-Demo1-Identity.ps1,
   and wires the Demo 2 (Network) environment:
 
-    1. Setup-FunctionPrivateEndpoint.ps1  -> shared private Function App (B1, .NET 8, code deployed,
+    1. Setup-FunctionPrivateEndpoint.ps1  -> shared private Function App (B1, .NET 10, code deployed,
                                              publicNetworkAccess=Disabled) + VNet + private endpoint
                                              + private DNS, in the shared RG
     2. Setup-AzureResources.ps1           -> Demo 2 MI + FIC (so the MI token works) and RBAC on the

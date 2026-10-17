@@ -26,6 +26,8 @@ public sealed class AccountSyncFunction
         {
             HttpResponseData unauthorized = request.CreateResponse(HttpStatusCode.Unauthorized);
             await unauthorized.WriteAsJsonAsync(new { error = "Bearer token is required." });
+            // WriteAsJsonAsync resets the status to 200 - restore it after writing the body.
+            unauthorized.StatusCode = HttpStatusCode.Unauthorized;
             return unauthorized;
         }
 
@@ -35,6 +37,7 @@ public sealed class AccountSyncFunction
         {
             HttpResponseData badRequest = request.CreateResponse(HttpStatusCode.BadRequest);
             await badRequest.WriteAsJsonAsync(new { error = validationError });
+            badRequest.StatusCode = HttpStatusCode.BadRequest;
             return badRequest;
         }
 

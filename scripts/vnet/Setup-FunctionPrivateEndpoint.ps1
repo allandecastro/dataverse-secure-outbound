@@ -4,7 +4,7 @@
 
 .DESCRIPTION
   Creates (or reuses) a dedicated resource group, VNet/subnet, storage account,
-  App Service plan (Basic B1, Linux), Function App (.NET 8 isolated, Always On), deploys the
+  App Service plan (Basic B1, Linux), Function App (.NET 10 isolated, Always On), deploys the
   ErpMockFunction package, then adds the Private Endpoint and Private DNS plumbing for
   `privatelink.azurewebsites.net` and finally disables public access.
 
@@ -286,7 +286,7 @@ if ($null -eq $func) {
         --os-type Linux `
         --functions-version 4 `
         --runtime dotnet-isolated `
-        --runtime-version 8 `
+        --runtime-version 10 `
         --app-insights $ApplicationInsightsName `
         --https-only true | Out-Null
     Write-Host "Created Function App '$FunctionAppName'."
@@ -295,14 +295,15 @@ if ($null -eq $func) {
     Write-Host "Function App '$FunctionAppName' already exists."
 }
 
-# Pin the runtime to the version the code targets (net8.0). Without it Azure picks its current
-# default (DOTNET-ISOLATED|10.0 at the time of writing) and the worker fails to start (HTTP 503).
+# Pin the runtime to the version the code targets (net10.0). Without an explicit pin Azure picks its
+# current default, and a mismatch with the target framework makes the worker fail to start (HTTP 503).
+# Keep this in sync with <TargetFramework> in src/ErpMockFunction/ErpMockFunction.csproj.
 az functionapp config set `
     --resource-group $ResourceGroupName `
     --name $FunctionAppName `
-    --linux-fx-version "DOTNET-ISOLATED|8.0" `
+    --linux-fx-version "DOTNET-ISOLATED|10.0" `
     --always-on true | Out-Null
-Write-Host "Runtime pinned to DOTNET-ISOLATED|8.0, Always On enabled."
+Write-Host "Runtime pinned to DOTNET-ISOLATED|10.0, Always On enabled."
 
 # 6b) Deploy the code while the site is temporarily publicly reachable. Public access is closed
 #     again in 'finally', so a failed or timed-out deployment never leaves the Function exposed
