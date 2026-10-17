@@ -122,7 +122,7 @@ az login
   -CertificatePath "codesign.pfx" -CertificatePassword "<pwd>"
 
 # Demo 2 - Network pillar. Reuses the SHARED rg/Key Vault, adds the private Function App
-# func-secure-outbound-demo (B1, .NET 8, code deployed), the Demo 2 Managed Identity, the
+# func-secure-outbound-demo (B1, .NET 10, code deployed), the Demo 2 Managed Identity, the
 # subnet-injection enterprise policy, one "allow VNet / deny Internet" NSG per injected subnet
 # (that NSG - not the vault firewall - is what blocks the Key Vault for this environment), and the
 # VNet peering + private DNS links that let the injected subnets reach the private endpoint.

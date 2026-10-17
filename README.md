@@ -564,7 +564,7 @@ in about two hours. Order matters:
 | `az keyvault create` fails, name already in use | The vault is soft-deleted (90 days). Recreate its resource group, then `az keyvault recover --name <kv>`. |
 | `Forbidden` reading secrets from the recovered vault | Your data-plane role went away with the old RG: grant yourself `Key Vault Secrets Officer` again. |
 | `nodename nor servname provided` / `Hôte inconnu` right after creating an env | A resolver cached NXDOMAIN from a lookup made before the env existed. Wait ~5 min, or flush (`ipconfig /flushdns` on the runner VM). |
-| Function returns **503** after deployment | Runtime defaulted to a newer .NET than the code targets. The script pins `DOTNET-ISOLATED|8.0`. |
+| Function returns **503** after deployment | The app runtime does not match the code's target framework. The script pins `DOTNET-ISOLATED|10.0` to match `net10.0`. |
 | Plug-in does nothing in DEV after import | `pac solution import` leaves steps **disabled** without `--activate-plugins`. |
 | DEMO2: *"no Sandbox Hosts are currently available"* | Normal for a few minutes right after subnet injection is enabled - retry. |
 | DEMO2: Function hostname does not resolve | Private DNS zone has no A record (zone group missing) or is not linked to the injection VNets. |
@@ -585,7 +585,7 @@ src/SecureOutboundPlugin/        net462 plug-in (strong-named; local DLL+nupkg s
   Services/ErpService.cs              outbound call to the Function App (demo token)
   Services/EnvironmentVariableService.cs
   signing.local.props.example    sample local Authenticode config (copy to signing.local.props)
-src/ErpMockFunction/             Azure Function (dotnet-isolated net8) - POST /api/erp/account-sync
+src/ErpMockFunction/             Azure Function (dotnet-isolated net10) - POST /api/erp/account-sync
 scripts/
   Setup-AzureResources.ps1                 RG + MI + Key Vault + FIC + RBAC
   Provision-Demo1-Identity.ps1             one-shot: identity env
